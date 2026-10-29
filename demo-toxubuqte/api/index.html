@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>双人双模式智能竞技游戏（水果鱼类词汇战 + 英语对话比赛·含语法检测）</title>
+<style>
+:root{
+  --p1:#f59e0b;--p2:#0ea5e9;--fruit:#22c55e;--sea:#0ea5e9;--fire:#ef4444;--purple:#8b5cf6;
+  --bg:#fffaf0;--panel:#ffffff;--text:#1b2a3a;--muted:#7286a0;--border:#ffe6c2;
+  --err:#ef4444;--ok:#16a34a;--shadow:0 6px 22px rgba(245,158,11,.14);
+}
+:root.dark{--bg:#12131a;--panel:#1b1e28;--text:#eef2f7;--muted:#93a1b5;--border:#2c3242;--shadow:0 6px 22px rgba(0,0,0,.4)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:
+  radial-gradient(900px 300px at 8% -5%, rgba(251,191,36,.25), transparent),
+  radial-gradient(900px 300px at 95% -5%, rgba(56,189,248,.25), transparent),
+  var(--bg);color:var(--text);min-height:100vh;transition:.4s}
+body.mode-en{background:
+  radial-gradient(900px 300px at 8% -5%, rgba(139,92,246,.28), transparent),
+  radial-gradient(900px 300px at 95% -5%, rgba(56,189,248,.22), transparent),
+  var(--bg)}
+body.hard{background:
+  radial-gradient(700px 260px at 0% -3%, rgba(239,68,68,.3), transparent),
+  radial-gradient(700px 260px at 100% -3%, rgba(249,115,22,.26), transparent),
+  radial-gradient(800px 300px at 50% 110%, rgba(245,158,11,.16), transparent), var(--bg)}
+.container{max-width:1060px;margin:0 auto;padding:18px 16px 40px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 0 14px}
+.logo{font-weight:900;font-size:21px;background:linear-gradient(90deg,var(--p1),var(--p2));-webkit-background-clip:text;background-clip:text;color:transparent}
+body.mode-en .logo{background:linear-gradient(90deg,var(--purple),var(--p2));-webkit-background-clip:text;background-clip:text}
+.sub{color:var(--muted);font-size:12.5px;width:100%}
+.spacer{flex:1}
+.btn{padding:9px 16px;border-radius:11px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:13.5px;cursor:pointer;transition:.15s;white-space:nowrap;font-weight:700}
+.btn:hover{border-color:var(--p2);color:var(--p2)}
+.btn.primary{background:linear-gradient(90deg,var(--p1),var(--p2));border:none;color:#fff}
+.btn.primary:hover{opacity:.9;color:#fff}
+.btn.danger{color:var(--err)}.btn.danger:hover{border-color:var(--err);color:var(--err)}
+.btn.hintbtn{border-color:var(--fruit);color:var(--fruit)}
+.btn.hintbtn:hover{background:color-mix(in srgb,var(--fruit) 12%, var(--panel))}
+.btn.answerbtn{background:linear-gradient(90deg,#f97316,#ef4444);border:none;color:#fff}
+.btn.answerbtn:hover{opacity:.9;color:#fff}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px;transition:.3s}
+body.hard .card.play-zone{border-color:color-mix(in srgb,var(--fire) 45%, var(--border));box-shadow:0 6px 26px rgba(239,68,68,.18)}
+body.mode-en .card.play-zone{border-color:color-mix(in srgb,var(--purple) 45%, var(--border));box-shadow:0 6px 26px rgba(139,92,246,.16)}
+.setup-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.setup-row .f{flex:1;min-width:160px}
+.setup-row label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-weight:700}
+.setup-row input{width:100%;padding:12px 14px;border-radius:12px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;outline:none}
+.setup-row input:focus{border-color:var(--p2)}
+.game-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.gt{position:relative}
+.gt input{position:absolute;opacity:0;pointer-events:none}
+.gt .tb{display:block;padding:11px 18px;border-radius:12px;border:2.5px solid var(--border);cursor:pointer;font-weight:800;font-size:14px;background:var(--panel);transition:.2s}
+.gt .tb .sm{display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-top:3px}
+.gt input:checked + .tb.t-words{border-color:var(--fruit);background:color-mix(in srgb,var(--fruit) 10%, var(--panel));box-shadow:0 0 0 4px color-mix(in srgb,var(--fruit) 14%, transparent)}
+.gt input:checked + .tb.t-en{border-color:var(--purple);background:color-mix(in srgb,var(--purple) 10%, var(--panel));box-shadow:0 0 0 4px color-mix(in srgb,var(--purple) 16%, transparent)}
+.diff-tabs{display:flex;gap:8px;margin-bottom:10px}
+.dt{position:relative}
+.dt input{position:absolute;opacity:0;pointer-events:none}
+.dt .db{display:block;padding:8px 16px;border-radius:10px;border:2px solid var(--border);cursor:pointer;font-weight:800;font-size:13px;background:var(--panel);transition:.2s}
+.dt input:checked + .db.d-n{border-color:var(--fruit);color:var(--fruit);background:color-mix(in srgb,var(--fruit) 12%, var(--panel))}
+.dt input:checked + .db.d-h{border-color:var(--fire);color:var(--fire);background:color-mix(in srgb,var(--fire) 10%, var(--panel));animation:flameB 1.4s infinite}
+@keyframes flameB{0%,100%{box-shadow:0 0 0 3px rgba(239,68,68,.15)}50%{box-shadow:0 0 0 8px rgba(249,115,22,.1)}}
+.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:12px}
+@media(max-width:700px){.scoreboard{grid-template-columns:1fr}}
+.score-card{border-radius:16px;padding:16px;border:3px solid var(--border);background:var(--panel);transition:.25s}
+.score-card.p1{border-color:color-mix(in srgb,var(--p1) 55%, var(--border))}
+.score-card.p2{border-color:color-mix(in srgb,var(--p2) 55%, var(--border))}
+.score-card.p1.active{color:var(--p1);animation:glow1 1.4s infinite}
+.score-card.p2.active{color:var(--p2);animation:glow2 1.4s infinite}
+@keyframes glow1{0%,100%{box-shadow:0 0 0 3px color-mix(in srgb,var(--p1) 18%, transparent)}50%{box-shadow:0 0 0 9px color-mix(in srgb,var(--p1) 10%, transparent)}}
+@keyframes glow2{0%,100%{box-shadow:0 0 0 3px color-mix(in srgb,var(--p2) 18%, transparent)}50%{box-shadow:0 0 0 9px color-mix(in srgb,var(--p2) 10%, transparent)}}
+.score-card .name{font-weight:800;font-size:15.5px;color:var(--text);display:flex;align-items:center;gap:8px}
+.score-card .name .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.score-card.p1 .name .dot{background:var(--p1)}
+.score-card.p2 .name .dot{background:var(--p2)}
+.score-card .score{font-size:46px;font-weight:900;line-height:1.1;color:inherit}
+.score-card .score small{font-size:14px;color:var(--muted);font-weight:700}
+.score-card .words{font-size:11.5px;color:var(--muted);margin-top:4px}
+.vs{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:var(--muted)}
+.turn-banner{text-align:center;padding:14px;border-radius:14px;font-size:18px;font-weight:900;margin-bottom:14px;border:2px dashed var(--border)}
+.turn-banner.p1{background:color-mix(in srgb,var(--p1) 14%, var(--panel));border-color:var(--p1);color:var(--p1)}
+.turn-banner.p2{background:color-mix(in srgb,var(--p2) 14%, var(--panel));border-color:var(--p2);color:var(--p2)}
+.scenario{display:none;border:2.5px solid color-mix(in srgb,var(--purple) 55%, var(--border));border-radius:14px;padding:14px;margin-bottom:12px;background:color-mix(in srgb,var(--purple) 7%, var(--panel))}
+body.mode-en .scenario{display:block;animation:pop .3s}
+.scenario .tag{display:inline-block;font-size:11.5px;font-weight:800;color:var(--purple);background:color-mix(in srgb,var(--purple) 15%, var(--panel));border-radius:999px;padding:3px 11px;margin-bottom:8px}
+.scenario .sys{font-family:Georgia,'Times New Roman',serif;font-size:16.5px;font-weight:700;color:var(--text);line-height:1.5}
+.scenario .sys::before{content:'🗣️ System: '}
+.scenario .req{font-size:12.5px;color:var(--muted);margin-top:8px}
+.scenario .req b{color:var(--purple)}
+.input-row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
+.single-input{flex:1;min-width:170px}
+.dual-input{flex:1;display:none;gap:10px;flex-wrap:wrap;min-width:250px}
+body.hard .dual-input{display:flex}
+body.hard .single-input{display:none}
+body.mode-en .single-input,body.mode-en .dual-input{display:none}
+body.mode-en .en-input{display:flex}
+.en-input{display:none;flex:1;min-width:250px}
+#nameInput,#cnInput,#enInput,#ansInput{width:100%;padding:14px 15px;border-radius:12px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;outline:none;transition:.15s}
+#enInput,#ansInput{font-family:Georgia,'Times New Roman',serif}
+#nameInput:focus,#cnInput:focus,#enInput:focus,#ansInput:focus{border-color:var(--p2)}
+#nameInput.shake,#cnInput.shake,#enInput.shake,#ansInput.shake{animation:shake .4s;border-color:var(--err)!important}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.cat-select{display:flex;gap:8px}
+.cat-radio{position:relative}
+.cat-radio input{position:absolute;opacity:0;pointer-events:none}
+.cat-radio span{display:inline-flex;align-items:center;gap:6px;padding:13px 16px;border-radius:12px;border:2px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;font-weight:700;transition:.15s;color:var(--text)}
+.cat-radio input:checked + span.c-f{border-color:var(--fruit);background:color-mix(in srgb,var(--fruit) 14%, var(--bg));color:var(--fruit)}
+.cat-radio input:checked + span.c-s{border-color:var(--sea);background:color-mix(in srgb,var(--sea) 14%, var(--bg));color:var(--sea)}
+#submitBtn{padding:14px 22px;font-size:15px}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.err-box,.ok-box,.warn-box{display:none;margin-top:12px;border-radius:12px;padding:12px 14px;font-weight:800;font-size:14.5px;animation:pop .25s}
+.err-box.show,.ok-box.show,.warn-box.show{display:block}
+.err-box{background:#fef2f2;border:2px solid var(--err);color:var(--err)}
+.ok-box{background:#f0fdf4;border:2px solid var(--ok);color:var(--ok)}
+.warn-box{background:#fff7ed;border:2px solid #f97316;color:#c2410c}
+:root.dark .err-box{background:#3a1420}
+:root.dark .ok-box{background:#122e1c}
+:root.dark .warn-box{background:#3a2410}
+@keyframes pop{from{transform:scale(.96);opacity:.4}to{transform:scale(1);opacity:1}}
+.sug-box{display:none;margin-top:12px;border:2px dashed var(--fruit);border-radius:12px;padding:12px;background:color-mix(in srgb,var(--fruit) 7%, var(--panel))}
+.sug-box.show{display:block;animation:pop .25s}
+body.hard .sug-box{border-color:var(--fire);background:color-mix(in srgb,var(--fire) 6%, var(--panel))}
+.sug-box h5{font-size:13px;color:var(--fruit);margin-bottom:8px}
+body.hard .sug-box h5{color:var(--fire)}
+.sug-chips{display:flex;flex-wrap:wrap;gap:7px}
+.sug-chip{padding:7px 13px;border-radius:999px;font-size:13.5px;font-weight:700;border:1.5px solid color-mix(in srgb,var(--fruit) 55%, var(--border));background:var(--panel);color:var(--fruit);cursor:pointer;transition:.15s}
+.sug-chip:hover{background:var(--fruit);color:#fff}
+body.hard .sug-chip{border-color:color-mix(in srgb,var(--fire) 55%, var(--border));color:var(--fire)}
+body.hard .sug-chip:hover{background:var(--fire);color:#fff}
+.sug-chip .en{font-family:Georgia,serif;opacity:.75;font-weight:600}
+.lists{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.lists{grid-template-columns:1fr}}
+.list-card{border:2px solid var(--border);border-radius:14px;padding:14px;background:var(--panel)}
+.list-card.p1{border-color:color-mix(in srgb,var(--p1) 50%, var(--border))}
+.list-card.p2{border-color:color-mix(in srgb,var(--p2) 50%, var(--border))}
+.list-card h4{font-size:14px;margin-bottom:10px;display:flex;gap:8px;align-items:center}
+.list-card.p1 h4{color:var(--p1)}
+.list-card.p2 h4{color:var(--p2)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;min-height:56px}
+.chip{padding:6px 12px;border-radius:999px;font-size:13.5px;font-weight:700;border:1.5px solid var(--border);background:var(--bg);animation:pop .25s;max-width:100%;word-break:break-word}
+.chip.f{border-color:color-mix(in srgb,var(--fruit) 55%, var(--border));color:var(--fruit)}
+.chip.s{border-color:color-mix(in srgb,var(--sea) 55%, var(--border));color:var(--sea)}
+.chip.skip{border-color:color-mix(in srgb,var(--fire) 55%, var(--border));color:var(--fire);text-decoration:line-through;opacity:.85}
+.chip .en{font-family:Georgia,serif;font-weight:600;opacity:.7;margin-left:5px;font-size:12.5px}
+.chip .idx{font-size:10px;color:var(--muted);margin-right:4px}
+.empty{color:var(--muted);font-size:13px;width:100%;padding:14px 0;text-align:center}
+.log{margin-top:14px;border-top:1px dashed var(--border);padding-top:10px;font-size:12.5px;color:var(--muted);max-height:160px;overflow:auto}
+.log div{padding:3px 0;border-bottom:1px dashed color-mix(in srgb,var(--border) 60%, transparent)}
+.log .dup{color:var(--err);font-weight:800}
+.log .skip{color:var(--fire);font-weight:800}
+.log .hit{color:var(--ok);font-weight:700}
+.kb-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.kb-tag{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--muted)}
+.kb-tag.f{border-color:color-mix(in srgb,var(--fruit) 45%, var(--border));color:var(--fruit)}
+.kb-tag.s{border-color:color-mix(in srgb,var(--sea) 45%, var(--border));color:var(--sea)}
+.kb-tag.used{opacity:.4;text-decoration:line-through}
+.kb-tag .en{font-family:Georgia,serif;font-size:11px;opacity:.7;margin-left:3px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:60;padding:18px}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:18px;max-width:560px;width:100%;padding:24px;text-align:center;box-shadow:var(--shadow);animation:pop .3s;max-height:90vh;overflow:auto}
+.modal h2{font-size:22px;margin-bottom:10px;background:linear-gradient(90deg,var(--p1),var(--p2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.modal .ans-title{font-size:15px;font-weight:800;color:var(--fire);margin:8px 0}
+.modal .ans-en{font-family:Georgia,serif;font-size:18px;font-weight:700;color:var(--text);background:var(--bg);border:1.5px dashed var(--border);border-radius:10px;padding:12px;margin:8px 0;word-break:break-word}
+.modal .ans-tip{font-size:12.5px;color:var(--muted);white-space:pre-line;text-align:left}
+.modal .res{font-size:34px;font-weight:900;margin:10px 0 16px}
+.modal .res .a{color:var(--p1)}.modal .res .b{color:var(--p2)}
+.modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:11px 20px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;z-index:99;pointer-events:none;box-shadow:var(--shadow);max-width:90vw;font-weight:700}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:var(--ok);color:var(--ok)}
+#toast.err{border-color:var(--err);color:var(--err)}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <div class="logo">⚔️ 双人双模式智能竞技游戏</div>
+      <div class="sub">模式一：水果鱼类词汇战（普通/🔥困难）· 模式二：🗣️ 英语对话比赛（含 ⚠️ 语法错误自动检测）· 💡 答不上免分跳过 · 全局查重 · LocalStorage 自动保存</div>
+    </div>
+    <span class="spacer"></span>
+    <button class="btn" onclick="toggleTheme()" id="themeBtn">🌙 夜间</button>
+    <button class="btn" onclick="endGame()">🏁 结算</button>
+    <button class="btn danger" onclick="restart()">🔄 重新开始</button>
+    <button class="btn danger" onclick="clearData()">🗑 清空数据</button>
+  </header>
+
+  <div class="card" id="setupCard">
+    <div class="game-tabs">
+      <label class="gt">
+        <input type="radio" name="gmode" value="words" checked onchange="setGMode('words')">
+        <span class="tb t-words">🎮 模式一：水果与鱼类词汇战<span class="sm">普通模式只输中文 / 🔥困难模式中英同输</span></span>
+      </label>
+      <label class="gt">
+        <input type="radio" name="gmode" value="en" onchange="setGMode('en')">
+        <span class="tb t-en">🗣️ 模式二：英语对话比赛<span class="sm">随机场景 + 关键词判定 + ⚠️ 语法错误检测引擎</span></span>
+      </label>
+    </div>
+    <div class="diff-tabs" id="diffTabs">
+      <label class="dt"><input type="radio" name="diff" value="normal" onchange="setDiff('normal')"><span class="db d-n">🌿 普通模式（只输中文）</span></label>
+      <label class="dt"><input type="radio" name="diff" value="hard" onchange="setDiff('hard')"><span class="db d-h">🔥 困难模式（中文 + English）</span></label>
+    </div>
+    <div class="setup-row">
+      <div class="f"><label>🟠 玩家 1 名称</label><input id="p1Name" placeholder="玩家 A" maxlength="12"></div>
+      <div class="f"><label>🔵 玩家 2 名称</label><input id="p2Name" placeholder="玩家 B" maxlength="12"></div>
+      <button class="btn primary" onclick="startGame()" style="padding:13px 24px">🎮 开始比赛</button>
+    </div>
+    <div class="hint">💡 开赛后仍可切换模式与难度；回车或点击开始；双击计分卡可改名</div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="score-card p1" id="card1">
+      <div class="name"><span class="dot"></span><span id="name1">玩家 A</span></div>
+      <div class="score" id="score1">0 <small>分</small></div>
+      <div class="words" id="words1">尚未出招</div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="score-card p2" id="card2">
+      <div class="name"><span class="dot"></span><span id="name2">玩家 B</span></div>
+      <div class="score" id="score2">0 <small>分</small></div>
+      <div class="words" id="words2">尚未出招</div>
+    </div>
+  </div>
+
+  <div class="card play-zone" style="margin-top:16px">
+    <div class="turn-banner p1" id="turnBanner">👉 当前回合：玩家 A</div>
+
+    <div class="scenario">
+      <span class="tag" id="scTag">情景 1</span>
+      <div class="sys" id="scLine">Excuse me, where is the nearest station?</div>
+      <div class="req">请当前玩家用<b>符合该情景的英文</b>作答（≥2 个单词，语法正确，与情景关键词/句式相关）· 回车提交</div>
+    </div>
+
+    <div class="input-row">
+      <div class="single-input"><input id="nameInput" placeholder="输入中文名称（如：苹果）..." autocomplete="off"></div>
+      <div class="dual-input">
+        <input id="cnInput" placeholder="中文名（如：苹果）" autocomplete="off" style="flex:1;min-width:130px">
+        <input id="enInput" placeholder="English (如：Apple)" autocomplete="off" style="flex:1;min-width:130px">
+      </div>
+      <div class="en-input"><input id="ansInput" placeholder="Your English answer... (e.g. Go straight and turn left.)" autocomplete="off"></div>
+      <div class="cat-select" id="catSelect">
+        <label class="cat-radio"><input type="radio" name="cat" value="f" checked><span class="c-f">🍎 水果</span></label>
+        <label class="cat-radio"><input type="radio" name="cat" value="s"><span class="c-s">🐟 鱼类</span></label>
+      </div>
+      <button class="btn primary" id="submitBtn" onclick="submitTurn()">提交 ⚔</button>
+    </div>
+
+    <div class="btnrow">
+      <button class="btn hintbtn" id="hintBtn" onclick="showSuggestions()">💡 查看提示</button>
+      <button class="btn answerbtn" onclick="showAnswer()">💡 答不上？查看提示/答案</button>
+      <button class="btn" id="kbBtn" onclick="toggleKB()">📚 知识库</button>
+    </div>
+
+    <div class="hint" id="ruleHint"></div>
+    <div class="err-box" id="errBox"></div>
+    <div class="ok-box" id="okBox"></div>
+    <div class="warn-box" id="warnBox"></div>
+
+    <div class="sug-box" id="sugBox">
+      <h5 id="sugTitle">💡 提示（点击直接填入，均为尚未被使用的词）</h5>
+      <div class="sug-chips" id="sugChips"></div>
+    </div>
+
+    <div class="lists" style="margin-top:16px">
+      <div class="list-card p1">
+        <h4>🟠 <span id="listName1">玩家 A</span> 的出招 <span style="color:var(--muted);font-weight:600" id="listCnt1">(0)</span></h4>
+        <div class="chips" id="chips1"><div class="empty">暂无</div></div>
+      </div>
+      <div class="list-card p2">
+        <h4>🔵 <span id="listName2">玩家 B</span> 的出招 <span style="color:var(--muted);font-weight:600" id="listCnt2">(0)</span></h4>
+        <div class="chips" id="chips2"><div class="empty">暂无</div></div>
+      </div>
+    </div>
+
+    <div class="log" id="log"><div>暂无历史记录</div></div>
+  </div>
+
+  <div class="card" id="kbCard" style="display:none">
+    <h4 style="font-size:14.5px;margin-bottom:6px">📚 内置中英对照知识库（划线 = 已被说过）</h4>
+    <div style="font-size:12px;color:var(--muted)">🍎 水果 <b id="kbFruitCnt"></b> 种 · 🐟 鱼类 <b id="kbSeaCnt"></b> 种</div>
+    <div style="margin-top:10px"><b style="font-size:13px;color:var(--fruit)">🍎 水果：</b></div>
+    <div class="kb-grid" id="kbFruit"></div>
+    <div style="margin-top:12px"><b style="font-size:13px;color:var(--sea)">🐟 鱼类：</b></div>
+    <div class="kb-grid" id="kbSea"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="answerModal">
+  <div class="modal">
+    <h2 id="amTitle">💡 提示 / 参考答案</h2>
+    <div class="ans-title" id="amTag"></div>
+    <div class="ans-en" id="amEn"></div>
+    <div class="ans-tip" id="amTip"></div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn" onclick="closeAnswer(false)">关闭（继续答题）</button>
+      <button class="btn answerbtn" onclick="closeAnswer(true)">🙈 放弃本回合（不得分，跳过）</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="resultModal">
+  <div class="modal">
+    <h2>🏆 比赛结算</h2>
+    <div class="res" id="resText"></div>
+    <div style="color:var(--muted);font-size:13.5px" id="resDetail"></div>
+    <div class="modal-actions" style="margin-top:18px">
+      <button class="btn" onclick="closeResult()">继续比赛</button>
+      <button class="btn primary" onclick="closeResult();restart()">🔄 再来一局</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ======== 📚 知识库：水果 & 鱼类（中英对照） ======== */
+const FRUITS=[
+ {c:"苹果",e:"Apple"},{c:"香蕉",e:"Banana"},{c:"榴莲",e:"Durian"},{c:"火龙果",e:"Dragon Fruit"},
+ {c:"葡萄",e:"Grape"},{c:"西瓜",e:"Watermelon"},{c:"草莓",e:"Strawberry"},{c:"蓝莓",e:"Blueberry"},
+ {c:"芒果",e:"Mango"},{c:"菠萝",e:"Pineapple"},{c:"樱桃",e:"Cherry"},{c:"柠檬",e:"Lemon"},
+ {c:"橙子",e:"Orange"},{c:"柚子",e:"Pomelo"},{c:"梨",e:"Pear"},{c:"桃子",e:"Peach"},
+ {c:"猕猴桃",e:"Kiwi"},{c:"哈密瓜",e:"Hami Melon"},{c:"椰子",e:"Coconut"},{c:"荔枝",e:"Lychee"},
+ {c:"龙眼",e:"Longan"},{c:"山竹",e:"Mangosteen"},{c:"石榴",e:"Pomegranate"},{c:"柿子",e:"Persimmon"},
+ {c:"枇杷",e:"Loquat"},{c:"杨梅",e:"Waxberry"},{c:"桑葚",e:"Mulberry"},{c:"无花果",e:"Fig"},
+ {c:"百香果",e:"Passion Fruit"},{c:"牛油果",e:"Avocado"},{c:"莲雾",e:"Wax Apple"},
+ {c:"番石榴",e:"Guava"},{c:"菠萝蜜",e:"Jackfruit"},{c:"椰枣",e:"Date"},{c:"脐橙",e:"Navel Orange"},
+ {c:"西柚",e:"Grapefruit"},{c:"青梅",e:"Green Plum"},{c:"杨桃",e:"Starfruit"},{c:"木瓜",e:"Papaya"},
+ {c:"山楂",e:"Hawthorn"},{c:"人参果",e:"Pepino"},{c:"雪莲果",e:"Yacon"},{c:"黑加仑",e:"Blackcurrant"},
+ {c:"树莓",e:"Raspberry"},{c:"蔓越莓",e:"Cranberry"},{c:"沙棘",e:"Sea Buckthorn"},{c:"黄皮果",e:"Wampee"},
+ {c:"甘蔗",e:"Sugarcane"},{c:"橄榄",e:"Olive"},{c:"金桔",e:"Kumquat"},{c:"红毛丹",e:"Rambutan"}
+];
+const FISHES=[
+ {c:"草鱼",e:"Grass Carp"},{c:"金枪鱼",e:"Tuna"},{c:"三文鱼",e:"Salmon"},{c:"小丑鱼",e:"Clownfish"},
+ {c:"鲤鱼",e:"Carp"},{c:"鲫鱼",e:"Crucian Carp"},{c:"鲈鱼",e:"Sea Bass"},{c:"鳕鱼",e:"Cod"},
+ {c:"带鱼",e:"Hairtail"},{c:"黄花鱼",e:"Yellow Croaker"},{c:"沙丁鱼",e:"Sardine"},{c:"鳗鱼",e:"Eel"},
+ {c:"鲶鱼",e:"Catfish"},{c:"黑鱼",e:"Snakehead"},{c:"鳙鱼",e:"Bighead Carp"},{c:"鲢鱼",e:"Silver Carp"},
+ {c:"武昌鱼",e:"Wuchang Fish"},{c:"鲳鱼",e:"Pomfret"},{c:"黄鳝",e:"Swamp Eel"},{c:"泥鳅",e:"Loach"},
+ {c:"罗非鱼",e:"Tilapia"},{c:"石斑鱼",e:"Grouper"},{c:"比目鱼",e:"Flatfish"},{c:"多宝鱼",e:"Turbot"},
+ {c:"秋刀鱼",e:"Pacific Saury"},{c:"青花鱼",e:"Mackerel"},{c:"虹鳟",e:"Rainbow Trout"},{c:"银鱼",e:"Silverfish"},
+ {c:"海鲈",e:"European Bass"},{c:"马鲛鱼",e:"Spanish Mackerel"},{c:"旗鱼",e:"Sailfish"},{c:"剑鱼",e:"Swordfish"},
+ {c:"鲟鱼",e:"Sturgeon"},{c:"狗鱼",e:"Pike"},{c:"鳜鱼",e:"Mandarin Fish"},{c:"黄颡鱼",e:"Yellow Catfish"},
+ {c:"麦穗鱼",e:"Stone Moroko"},{c:"鳑鲏",e:"Bitterling"},{c:"攀鲈",e:"Climbing Perch"},{c:"斗鱼",e:"Betta"},
+ {c:"孔雀鱼",e:"Guppy"},{c:"锦鲤",e:"Koi"},{c:"金鱼",e:"Goldfish"},{c:"地图鱼",e:"Oscar"},
+ {c:"食人鱼",e:"Piranha"},{c:"电鳗",e:"Electric Eel"},{c:"翻车鱼",e:"Sunfish"},{c:"河豚",e:"Pufferfish"},
+ {c:"海马",e:"Seahorse"},{c:"龙虾",e:"Lobster"},{c:"对虾",e:"Kuruma Prawn"},{c:"基围虾",e:"White Shrimp"},
+ {c:"梭子蟹",e:"Swimming Crab"},{c:"大闸蟹",e:"Hairy Crab"},{c:"生蚝",e:"Oyster"},{c:"扇贝",e:"Scallop"},
+ {c:"蛤蜊",e:"Clam"},{c:"鱿鱼",e:"Squid"},{c:"章鱼",e:"Octopus"},{c:"墨鱼",e:"Cuttlefish"},
+ {c:"海参",e:"Sea Cucumber"},{c:"海胆",e:"Sea Urchin"},{c:"青虾",e:"Freshwater Shrimp"},
+ {c:"花蟹",e:"Blue Crab"},{c:"银鲳",e:"Silver Pomfret"},{c:"秋鲑",e:"Autumn Salmon"},{c:"罗汉鱼",e:"Flowerhorn"}
+];
+const CN2ITEM=new Map(), EN2ITEM=new Map();
+function normCn(s){return String(s||'').trim().replace(/\s+/g,'').toLowerCase()}
+function normEn(s){return String(s||'').trim().replace(/\s+/g,' ').toLowerCase()}
+FRUITS.forEach(x=>{x.cat='f';CN2ITEM.set(normCn(x.c),x);EN2ITEM.set(normEn(x.e),x)});
+FISHES.forEach(x=>{x.cat='s';CN2ITEM.set(normCn(x.c),x);EN2ITEM.set(normEn(x.e),x)});
+
+/* ======== 🗣️ 英语对话情景库 ======== */
+const SCENARIOS=[
+ {tag:"在餐厅点餐",line:"Good evening. Do you have a table for two?",kw:["yes","table","menu","please","order","would like","two","for two","sit"],ans:"Yes, right this way. Here is the menu. What would you like to order?"},
+ {tag:"在机场办理登机",line:"May I see your passport and ticket, please?",kw:["here","passport","ticket","yes","sure","certainly","boarding"],ans:"Sure, here you are. Here are my passport and ticket."},
+ {tag:"在超市买水果",line:"Hi, how much are the apples today?",kw:["they are","per kilo","pound","each","two dollars","expensive","fresh","cheap","cost","kg"],ans:"They are two dollars a kilo. They are very fresh today."},
+ {tag:"问路（最近的车站）",line:"Excuse me, where is the nearest station?",kw:["go straight","turn left","turn right","walk","block","street","straight","ahead","down","it is"],ans:"Go straight and turn left at the second street. It is about five minutes away."},
+ {tag:"在酒店办理入住",line:"Welcome to Sunshine Hotel. Do you have a reservation?",kw:["yes","reservation","book","name","checking in","room","mr","mrs"],ans:"Yes, I have a reservation under the name Smith."},
+ {tag:"在咖啡店点咖啡",line:"What can I get for you today?",kw:["coffee","latte","cappuccino","tea","please","would","cup","iced","have","black"],ans:"Could I have a large latte, please?"},
+ {tag:"看病（看医生）",line:"What seems to be the problem today?",kw:["i have","headache","fever","pain","hurt","sick","cough","feel","stomach","throat"],ans:"I have had a headache and a fever since yesterday."},
+ {tag:"购物（买衣服）",line:"Can I help you find something?",kw:["yes","looking","size","shirt","dress","try","wear","blue","coat","medium"],ans:"Yes, I am looking for a medium shirt. Where is the fitting room?"},
+ {tag:"在火车站买票",line:"Where would you like to go?",kw:["ticket","to","please","one","return","departure","leaving","train","going","want"],ans:"I would like one ticket to New York, please."},
+ {tag:"自我介绍（新同事）",line:"Hi, I am Tom. I just joined the team.",kw:["hi","nice","meet","i am","name","welcome","pleasure","glad","you","same"],ans:"Hi Tom, nice to meet you. I am Lily. Welcome to the team."},
+ {tag:"打电话预约",line:"Hello, this is Dr. Lee's office. How can I help you?",kw:["appointment","book","schedule","friday","monday","time","see","doctor","week","morning"],ans:"I would like to make an appointment with the doctor this week, please."},
+ {tag:"抱怨酒店房间",line:"Sorry, is there a problem with your room?",kw:["air","conditioning","wifi","towel","noisy","broken","fix","cold","hot","please"],ans:"Yes, the air conditioning does not work. Could you fix it, please?"},
+ {tag:"机场安检",line:"Please put your laptop and liquids in the tray.",kw:["okay","sure","here","done","now","any","need","remove","bag","take"],ans:"Okay, here you are. Do I need to take off my belt too?"},
+ {tag:"谈论天气",line:"Lovely weather today, isn't it?",kw:["yes","sunny","rain","hot","cold","beautiful","agree","looks","forecast","cloudy"],ans:"Yes, it is really sunny today. But it may rain tomorrow."},
+ {tag:"邀请朋友",line:"Are you free this Saturday evening?",kw:["yes","sure","what time","come","dinner","movie","love to","free","where","sounds"],ans:"Yes, I am free. What time should I come? I would love to have dinner."},
+ {tag:"在健身房",line:"Have you used this machine before?",kw:["no","first","time","how","show","yes","help","use","please","guide"],ans:"No, it is my first time. Could you show me how to use it?"},
+ {tag:"图书馆借书",line:"Do you have a library card?",kw:["yes","here","card","borrow","book","this one","show","new","apply","register"],ans:"Yes, here is my card. I would like to borrow this book, please."},
+ {tag:"打车去机场",line:"Where are you heading?",kw:["airport","please","flight","terminal","how long","much","fast","drop","run","going"],ans:"To the airport, please. My flight leaves in two hours."},
+ {tag:"还书道歉",line:"This book is two weeks overdue.",kw:["sorry","late","fine","pay","return","apologize","today","forgot","much","okay"],ans:"I am very sorry. I forgot. How much is the fine? I can pay today."},
+ {tag:"生日祝福",line:"Today is my birthday!",kw:["happy","birthday","congrats","wish","best","many","returns","great","celebrate","nice"],ans:"Happy birthday! I hope you have a wonderful day!"}
+];
+
+/* ======== ⚠️ 语法错误检测规则引擎 ======== */
+const SUBJ_ANY3=new Set(['he','she','it']);
+const BARE_VERBS=new Set(['go','come','do','have','eat','drink','take','make','see','want','need','like','love','help','give','get','say','tell','play','work','live','stay','look','call','meet','buy','sell','pay','try','start','open','close','put','feel','know','think','speak','write','read','run','walk','wait','order','fly','land','board','check','sit','stand','watch','clean','fix','show','borrow','return','join','finish','study','teach','learn','drive','swim','sing','dance','draw']);
+const IRREG_PAST={'went':'go','came':'come','did':'do','had':'have','ate':'eat','drank':'drink','took':'take','made':'make','saw':'see','got':'get','said':'say','told':'tell','bought':'buy','sold':'sell','paid':'pay','felt':'feel','knew':'know','thought':'think','spoke':'speak','wrote':'write','ran':'run','swam':'swim','sang':'sing','gave':'give','left':'leave','met':'meet','lost':'lose','won':'win','began':'begin','chose':'choose','flew':'fly','drove':'drive','brought':'bring','caught':'catch','taught':'teach'};
+const ADJ_ANT={'happy':'unhappy','tall':'short','short':'tall','hot':'cold','cold':'hot','big':'small','small':'big','good':'bad','bad':'good','beautiful':'ugly','expensive':'cheap','cheap':'expensive','easy':'difficult','difficult':'easy','young':'old','old':'young','clean':'dirty','dirty':'clean','full':'empty','empty':'full','rich':'poor','poor':'rich','right':'wrong','wrong':'right','fast':'slow','slow':'fast','heavy':'light','light':'heavy','strong':'weak','weak':'strong','early':'late','late':'early'};
+const BE_ADJ=new Set(['happy','sad','angry','tired','hungry','thirsty','busy','ready','sorry','free','cool','hot','cold','warm','late','early','young','old','rich','poor','right','wrong','sure','glad','pleased','afraid','sick','fine','great','nice','beautiful','ugly','tall','short','big','small','important','easy','difficult','comfortable','excited','nervous','proud','shy','kind','careful','serious','calm','safe','popular','famous','expensive','cheap','delicious','fresh','friendly','honest','smart','strong','weak','heavy','light','fast','slow','clean','dirty','full','open','broken','quiet','bright','dark','sweet','soft','hard','dry','wet']);
+
+function checkGrammar(text){
+  const issues=[];
+  const orig=text.trim();
+  if(!orig)return issues;
+  const plain=orig.replace(/[!?.,;:'"()]/g,' ').replace(/\s+/g,' ').trim();
+  const toks=plain.split(' ').filter(Boolean);
+  const low=toks.map(t=>t.toLowerCase());
+  const n=low.length;
+  if(!n)return issues;
+
+  // 规则1：遗漏 be 动词 —— 主语 + 形容词（You happy -> You are happy）
+  for(let i=0;i<n-1;i++){
+    const t=low[i], nx=low[i+1];
+    if(['i','you','we','they','he','she','it'].includes(t)&&BE_ADJ.has(nx)){
+      issues.push({type:'缺少 be 动词',detail:'「'+toks[i]+' '+toks[i+1]+'」缺少系动词',fix:toks[i]+(t==='i'?' am':' are')+' '+toks[i+1],tip:'主语 + 形容词需要 be 动词连接：You happy → You are happy'});
+      break;
+    }
+  }
+  // 规则2：主谓不一致（He go -> He goes）
+  if(n>=2&&SUBJ_ANY3.has(low[0])&&BARE_VERBS.has(low[1])){
+    const v=low[1];
+    const fix3=v==='go'?'goes':(v.endsWith('s')?v:v+'s');
+    issues.push({type:'主谓不一致',detail:'「'+toks[0]+' '+toks[1]+'」第三人称单数动词未变形',fix:toks[0]+' '+fix3,tip:'主语 he/she/it 一般现在时动词加 -s/-es：He go → He goes（否定：He doesn\'t go）'});
+  }
+  // 规则3：复数主语 + 单数动词（They goes / We wants）
+  if(n>=2&&['i','you','we','they'].includes(low[0])){
+    const v=low[1];
+    const base=v.endsWith('es')?v.slice(0,-2):(v.endsWith('s')&&v.length>2?v.slice(0,-1):null);
+    if(base&&BARE_VERBS.has(base)){
+      issues.push({type:'主谓不一致',detail:'「'+toks[0]+' '+toks[1]+'」主语非第三人称单数，动词不应加 -s',fix:toks[0]+' '+base,tip:'I/you/we/they 用动词原形：They goes → They go'});
+    }
+  }
+  // 规则4：be + 动词原形（He is go -> He is going）
+  if(n>=3&&['is','are','am','was','were'].includes(low[1])&&BARE_VERBS.has(low[2])){
+    issues.push({type:'时态/词性错误',detail:'「'+toks[1]+' '+toks[2]+'」be 动词后应接动名词/过去分词/形容词',fix:toks[0]+' '+toks[1]+' '+low[2]+'ing',tip:'be + v-ing（进行时）：He is go → He is going'});
+  }
+  // 规则5：重复单词（I want to to go）
+  for(let i=0;i<n-1;i++){
+    if(low[i]===low[i+1]&&!['no','very','so','really'].includes(low[i])){
+      issues.push({type:'重复单词',detail:'「'+toks[i]+'」重复出现',fix:toks.filter((t,idx)=>idx!==i+1).join(' '),tip:'删除重复的单词'});
+      break;
+    }
+  }
+  // 规则6：时态混用（I am went -> I went）
+  if(n>=3&&low[0]==='i'&&['am','is','are'].includes(low[1])&&IRREG_PAST[low[2]]){
+    issues.push({type:'时态错误',detail:'「'+toks[1]+' '+toks[2]+'」过去式与 be 动词混用',fix:'I '+IRREG_PAST[low[2]],tip:'过去动作用一般过去时：I am went → I went'});
+  }
+  // 规则7：程度副词冗余 / 反义形容词矛盾（very very good / big small）
+  for(let i=0;i<n-1;i++){
+    if(low[i]===low[i+1]&&['very','so','really'].includes(low[i])){
+      issues.push({type:'冗余重复',detail:'「'+toks[i]+' '+toks[i+1]+'」语义重复',fix:toks.filter((t,idx)=>idx!==i+1).join(' '),tip:'删除一个重复的程度副词'});
+      break;
+    }
+    const a=low[i],b=low[i+1];
+    if(ADJ_ANT[a]===b&&BE_ADJ.has(a)&&BE_ADJ.has(b)&&a!==b){
+      issues.push({type:'语义矛盾（反义形容词连用）',detail:'「'+toks[i]+' '+toks[i+1]+'」是一对反义形容词，不能连用',fix:toks.slice(0,i+1).join(' '),tip:'只能保留其中一个：big small → big'});
+      break;
+    }
+  }
+  // 规则8：句首字母未大写
+  if(/^[a-z]/.test(orig)){
+    issues.push({type:'大小写错误',detail:'句首字母应大写',fix:orig.charAt(0).toUpperCase()+orig.slice(1),tip:'英语句子首字母必须大写'});
+  }
+  // 规则9：缺少句末标点
+  if(!/[.!?]$/.test(orig)&&n>=4){
+    issues.push({type:'缺少句末标点',detail:'句子结尾缺少 . ? !',fix:orig+'.',tip:'完整句子结尾需要标点符号'});
+  }
+  // 规则10：常见拼写（alot / im）
+  if(/\balot\b/i.test(orig)){
+    issues.push({type:'拼写错误',detail:'「alot」应写作「a lot」',fix:orig.replace(/alot/gi,'a lot'),tip:'a lot 是两个单词'});
+  }
+  if(/\bim\b/i.test(orig)){
+    issues.push({type:'拼写/缩写错误',detail:'「im」应写作「I\'m」',fix:orig.replace(/\bim\b/gi,"I'm"),tip:'I am 的缩写是 I\'m，且 I 永远大写'});
+  }
+  return issues.slice(0,3);
+}
+
+const LS_DATA='dual_arena_v2', LS_THEME='fruitfish_battle_theme_v1';
+let state={
+  started:false,gmode:'words',diff:'normal',
+  names:['玩家 A','玩家 B'],turn:0,scores:[0,0],
+  words:[[],[]],all:new Set(),scIdx:-1,usedSc:new Set(),logs:[]
+};
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(LS_DATA)||'null');
+    if(d&&Array.isArray(d.words)&&d.words.length===2){
+      state.started=!!d.started;
+      state.gmode=d.gmode==='en'?'en':'words';
+      state.diff=d.diff==='hard'?'hard':'normal';
+      state.names=d.names||['玩家 A','玩家 B'];
+      state.turn=d.turn?1:0;
+      state.scores=d.scores||[0,0];
+      state.words=d.words;state.logs=d.logs||[];
+      state.all=new Set(d.all||[]);
+      state.usedSc=new Set(d.usedSc||[]);
+      state.scIdx=(typeof d.scIdx==='number')?d.scIdx:-1;
+      if(!state.all.size)state.words.forEach(w=>w.forEach(x=>state.all.add(keyOf(x))));
+    }
+  }catch(e){}
+  const th=localStorage.getItem(LS_THEME);
+  if(th==='dark')document.documentElement.classList.add('dark');
+  syncTheme();
+  document.querySelector('input[name="gmode"][value="'+state.gmode+'"]').checked=true;
+  const dv=document.querySelector('input[name="diff"][value="'+state.diff+'"]');if(dv)dv.checked=true;
+  applyModeUI();
+  document.getElementById('p1Name').value=state.names[0];
+  document.getElementById('p2Name').value=state.names[1];
+  if(state.gmode==='en'&&state.started&&state.scIdx<0)nextScenario();
+  render();
+}
+function persist(){
+  try{
+    localStorage.setItem(LS_DATA,JSON.stringify({
+      started:state.started,gmode:state.gmode,diff:state.diff,names:state.names,
+      turn:state.turn,scores:state.scores,words:state.words,
+      logs:state.logs.slice(0,60),all:[...state.all],usedSc:[...state.usedSc],scIdx:state.scIdx
+    }));
+  }catch(e){}
+}
+function keyOf(x){
+  if(x.text!==undefined)return 'en::'+normEn(x.text||'');
+  return 'w::'+normCn(x.c||'');
+}
+function curCat(){return document.querySelector('input[name="cat"]:checked').value}
+function catEmoji(c){return c==='f'?'🍎':'🐟'}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function setGMode(m){
+  state.gmode=m;
+  if(m==='en'&&state.started&&state.scIdx<0)nextScenario();
+  applyModeUI();persist();clearFeedback();render();
+}
+function setDiff(d){state.diff=d;applyModeUI();persist();clearFeedback()}
+function applyModeUI(){
+  const hard=state.gmode==='words'&&state.diff==='hard';
+  const en=state.gmode==='en';
+  document.body.classList.toggle('hard',hard);
+  document.body.classList.toggle('mode-en',en);
+  const dt=document.getElementById('diffTabs');if(dt)dt.style.display=en?'none':'';
+  const cs=document.getElementById('catSelect');if(cs)cs.style.display=en?'none':'';
+  const kb=document.getElementById('kbBtn');if(kb)kb.style.display=en?'none':'';
+  const hb=document.getElementById('hintBtn');if(hb)hb.textContent=en?'💡 对话参考':'💡 查看提示';
+  const rh=document.getElementById('ruleHint');if(!rh)return;
+  if(en){
+    const sc=curScenario();
+    rh.textContent=(sc?('🗣️ 情景【'+sc.tag+'】· '):'')+'当前玩家用 ≥2 个单词的英文作答（与情景关键词/句式相关）→ +1 分 · ⚠️ 内置语法引擎检测：主谓不一致/缺少 be 动词/时态错误等 → 红色警告、本回合作废不得分 · 重复 → ❌ 该内容已被使用过 · 💡按钮可看参考答案并跳过（不得分）';
+  }else if(hard){
+    rh.textContent='🔥 困难模式：中文与英文必须同时正确且匹配知识库词条 · 任意一空为空/写错/不匹配 → 红色警告 · 回车提交';
+  }else{
+    rh.textContent='🌿 普通模式：只需输入知识库内的中文名 · 全局查重 · 回车提交';
+  }
+}
+function curScenario(){return state.scIdx>=0?SCENARIOS[state.scIdx]:null}
+function nextScenario(){
+  const pool=SCENARIOS.map((s,i)=>i).filter(i=>!state.usedSc.has(i));
+  let idx;
+  if(!pool.length){state.usedSc.clear();idx=Math.floor(Math.random()*SCENARIOS.length)}
+  else idx=pool[Math.floor(Math.random()*pool.length)];
+  state.scIdx=idx;state.usedSc.add(idx);
+  persist();
+}
+function updateScenario(){
+  const sc=curScenario();
+  const t=document.getElementById('scTag'), l=document.getElementById('scLine');
+  if(!t||!l)return;
+  if(!sc){t.textContent='情景';l.textContent='...';return}
+  t.textContent='情景·'+sc.tag;
+  l.textContent=sc.line;
+}
+function startGame(){
+  const a=document.getElementById('p1Name').value.trim()||'玩家 A';
+  const b=document.getElementById('p2Name').value.trim()||'玩家 B';
+  state.names=[a,b];state.started=true;
+  document.getElementById('setupCard').style.display='none';
+  addLog('','🎮 比赛开始：'+a+' vs '+b+'（'+(state.gmode==='en'?'🗣️英语对话+语法检测':(state.diff==='hard'?'🔥困难词汇':'🌿普通词汇'))+'）');
+  if(state.gmode==='en'&&state.scIdx<0)nextScenario();
+  persist();render();focusInput();
+  toast('🎮 比赛开始！由 '+state.names[state.turn]+' 先说','ok');
+}
+function focusInput(){
+  const id=state.gmode==='en'?'ansInput':(state.diff==='hard'?'cnInput':'nameInput');
+  const el=document.getElementById(id);
+  if(el)el.focus();
+}
+function submitTurn(){
+  if(!state.started){startGame();return}
+  if(state.gmode==='en')return submitEnglish();
+  return submitWords();
+}
+function submitWords(){
+  const hard=state.diff==='hard';
+  if(!hard){
+    const inp=document.getElementById('nameInput');
+    const cn=inp.value.trim();
+    if(!cn){flash('err','⚠ 请输入名称再提交！');return}
+    const item=CN2ITEM.get(normCn(cn));
+    if(!item){fail(inp,'❌ 无效名称「'+cn+'」，不在水果/鱼类知识库中！');return}
+    const cat=curCat();
+    if(item.cat!==cat){fail(inp,'❌ 分类不符！「'+cn+'」属于'+(cat==='f'?'🐟 鱼类':'🍎 水果')+'，请切换分类再提交');return}
+    const k='w::'+normCn(item.c);
+    if(state.all.has(k)){fail(inp,'❌ 该内容已被使用过！「'+item.c+'」已被'+whoSaid(k)+'说过');return}
+    acceptWords(cat,item,inp);
+  }else{
+    const cnEl=document.getElementById('cnInput'), enEl=document.getElementById('enInput');
+    const cn=cnEl.value.trim(), en=enEl.value.trim();
+    if(!cn||!en){fail(!cn?cnEl:enEl,'❌ 中英文不匹配或不在知识库中！（两栏都要填写）');return}
+    const itemCn=CN2ITEM.get(normCn(cn)), itemEn=EN2ITEM.get(normEn(en));
+    if(!itemCn||!itemEn||itemCn!==itemEn){fail(enEl,'❌ 中英文不匹配或不在知识库中！（如：苹果 ↔ Apple 必须是同一词条）');return}
+    const cat=curCat();
+    if(itemCn.cat!==cat){fail(cnEl,'❌ 分类不符！「'+itemCn.c+'」属于'+(cat==='f'?'🐟 鱼类':'🍎 水果')+'，请切换分类再提交');return}
+    const k='w::'+normCn(itemCn.c);
+    if(state.all.has(k)){fail(cnEl,'❌ 该内容已被使用过！「'+itemCn.c+'」已被'+whoSaid(k)+'说过');return}
+    acceptWords(cat,itemCn,cnEl);enEl.value='';
+  }
+}
+function acceptWords(cat,item,el){
+  state.words[state.turn].push({c:item.c,e:item.e,cat:cat,ok:true,at:Date.now()});
+  const k='w::'+normCn(item.c);state.all.add(k);
+  el.value='';
+  document.getElementById('sugBox').classList.remove('show');
+  const saidBy=state.names[state.turn];
+  state.scores[state.turn]++;
+  addLog('hit',catEmoji(cat)+' '+saidBy+' 得分：'+item.c+' / '+item.e+' ['+(cat==='f'?'水果':'鱼类')+']');
+  flash('ok','✅ 有效！'+saidBy+' +1 分（'+state.scores[0]+' : '+state.scores[1]+'），轮到 '+state.names[1-state.turn]);
+  state.turn=1-state.turn;
+  persist();render();
+}
+function submitEnglish(){
+  const el=document.getElementById('ansInput');
+  const ans=el.value.trim().replace(/\s+/g,' ');
+  if(!ans){flash('err','⚠ 请输入英文回答再提交！');return}
+  const words=ans.split(' ').filter(Boolean);
+  if(words.length<2){fail(el,'❌ 回答太短！至少需要 2 个单词的完整英文回应。');return}
+  if(/[\u4e00-\u9fa5]/.test(ans)){fail(el,'❌ 模式二必须使用英文作答！请把中文翻译成英语后再提交。');return}
+  // ⚠️ 语法检测（先于关键词判定）
+  const issues=checkGrammar(ans);
+  if(issues.length){
+    const first=issues[0];
+    let msg='❌ 语法错误！【'+first.type+'】'+first.detail+' · 修改建议：「'+first.fix+'」';
+    if(issues.length>1)msg+='（另有 '+(issues.length-1)+' 处问题：'+issues.slice(1).map(x=>x.type).join('、')+'）';
+    fail(el,msg);
+    addLog('err','⚠️ 语法检测：'+first.detail+' → '+first.fix);
+    showGrammarFix(issues,ans);
+    return;
+  }
+  const k='en::'+normEn(ans);
+  if(state.all.has(k)){fail(el,'❌ 该内容已被使用过！该回答此前已被'+whoSaid(k)+'用过，换一种说法！');return}
+  const sc=curScenario();
+  if(!sc){fail(el,'❌ 暂无情景题，请重新开始比赛。');return}
+  const low=normEn(ans);
+  const hitKw=sc.kw.some(w=>low.includes(w));
+  if(!hitKw){
+    fail(el,'❌ 内容与情景【'+sc.tag+'】无关！（未命中情景关键词与表达方式）请围绕情景重新作答');
+    return;
+  }
+  state.words[state.turn].push({text:ans,sc:sc.tag,ok:true,at:Date.now()});
+  state.all.add(k);
+  el.value='';
+  document.getElementById('sugBox').classList.remove('show');
+  const saidBy=state.names[state.turn];
+  state.scores[state.turn]++;
+  addLog('hit','🗣️ '+saidBy+' 得分（语法正确）：'+ans);
+  flash('ok','✅ 回答出色、语法正确！'+saidBy+' +1 分（'+state.scores[0]+' : '+state.scores[1]+'），轮到 '+state.names[1-state.turn]);
+  state.turn=1-state.turn;
+  nextScenario();
+  persist();render();
+}
+function showGrammarFix(issues,original){
+  document.getElementById('amTitle').textContent='⚠️ 语法错误修改建议（不扣分，但本回合作废）';
+  document.getElementById('amTag').textContent='原句：'+original;
+  document.getElementById('amEn').textContent=issues[0].fix;
+  document.getElementById('amTip').textContent=issues.map(x=>'· '+x.type+'：'+x.detail+'\n  建议：'+x.tip).join('\n');
+  document.getElementById('answerModal').classList.add('show');
+}
+function fail(el,msg){
+  el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),450);
+  flash('err',msg);
+  const who=state.names[state.turn];
+  addLog(msg.indexOf('该内容已被使用过')>=0?'dup':'err',who+'：'+msg);
+  persist();
+}
+function whoSaid(k){
+  for(let i=0;i<2;i++){if(state.words[i].some(x=>keyOf(x)===k))return state.names[i]}
+  return '其他玩家';
+}
+function flash(type,msg){
+  ['errBox','okBox','warnBox'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('show')});
+  const map={err:'errBox',ok:'okBox',warn:'warnBox'};
+  const box=document.getElementById(map[type]);
+  if(!box)return;
+  box.textContent=msg;
+  void box.offsetWidth;box.classList.add('show');
+}
+function clearFeedback(){['errBox','okBox','warnBox'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('show')})}
+function addLog(cls,text){state.logs.unshift({cls:cls||'',text:text});renderLog()}
+function renderLog(){
+  const box=document.getElementById('log');
+  if(!box)return;
+  if(!state.logs.length){box.innerHTML='<div>暂无历史记录</div>';return}
+  box.innerHTML=state.logs.slice(0,50).map(l=>'<div class="'+(l.cls||'')+'">'+esc(l.text)+'</div>').join('');
+}
+function showSuggestions(){
+  if(state.gmode==='en'){
+    const sc=curScenario();
+    if(!sc)return;
+    document.getElementById('sugTitle').textContent='💡 情景关键词提示（点击填入）';
+    document.getElementById('sugChips').innerHTML=sc.kw.slice(0,8).map(w=>
+      '<span class="sug-chip" onclick="appendAns(\''+esc(w)+'\')">'+esc(w)+'</span>').join('');
+    document.getElementById('sugBox').classList.add('show');
+    return;
+  }
+  const pool=[...FRUITS,...FISHES].filter(x=>!state.all.has('w::'+normCn(x.c)));
+  if(!pool.length){toast('知识库已被说完了，你们太强了！','ok');return}
+  shuffle(pool);
+  document.getElementById('sugTitle').textContent='💡 提示（点击直接填入，均为尚未被说过的词）';
+  document.getElementById('sugChips').innerHTML=pool.slice(0,5).map(x=>
+    '<span class="sug-chip" onclick="fillWord(\''+esc(x.c)+'\',\''+esc(x.e)+'\')">'+
+    catEmoji(x.cat)+' '+esc(x.c)+' <span class="en">/ '+esc(x.e)+'</span></span>').join('');
+  document.getElementById('sugBox').classList.add('show');
+}
+function appendAns(w){
+  const el=document.getElementById('ansInput');
+  el.value=(el.value?el.value.replace(/\s+$/,' ')+' ':'')+w;
+  el.focus();
+}
+function fillWord(cn,en){
+  if(state.diff==='hard'){document.getElementById('cnInput').value=cn;document.getElementById('enInput').value=en}
+  else{document.getElementById('nameInput').value=cn}
+  clearFeedback();
+  ['nameInput','cnInput','enInput'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('shake')});
+  focusInput();
+}
+function showAnswer(){
+  const en=state.gmode==='en';
+  let tagTxt,ansTxt,tipTxt;
+  if(en){
+    const sc=curScenario();
+    if(!sc)return;
+    tagTxt='🗣️ 情景：'+sc.tag;
+    ansTxt=sc.ans;
+    tipTxt='标准示例回答（语法正确）· 点击「放弃本回合」→ 当前玩家不加分、本回合跳过、自动切换回合到 '+state.names[1-state.turn];
+  }else{
+    const pool=[...FRUITS,...FISHES].filter(x=>!state.all.has('w::'+normCn(x.c)));
+    if(!pool.length){toast('知识库已被说完了！','ok');return}
+    const pick=pool[Math.floor(Math.random()*pool.length)];
+    tagTxt=(state.diff==='hard'?'🔥 困难模式参考词条':'💡 推荐词条')+'：'+catEmoji(pick.cat)+' '+(pick.cat==='f'?'水果':'鱼类');
+    ansTxt=pick.c+' / '+pick.e;
+    tipTxt='点「放弃本回合」→ 本回合跳过、不得分、自动轮到 '+state.names[1-state.turn]+'（也可关闭弹窗自己再想想）';
+  }
+  document.getElementById('amTitle').textContent='💡 答不上？提示 / 答案';
+  document.getElementById('amTag').textContent=tagTxt;
+  document.getElementById('amEn').textContent=ansTxt;
+  document.getElementById('amTip').textContent=tipTxt;
+  document.getElementById('answerModal').classList.add('show');
+}
+function closeAnswer(skip){
+  document.getElementById('answerModal').classList.remove('show');
+  if(!skip)return;
+  if(!state.started){toast('比赛还没开始','err');return}
+  const who=state.names[state.turn];
+  if(state.gmode==='en'){
+    const sc=curScenario();
+    state.words[state.turn].push({text:'[跳过] '+(sc?sc.tag:''),sc:sc?sc.tag:'',ok:false,at:Date.now()});
+    nextScenario();
+    addLog('skip','🙈 '+who+' 查看答案后放弃本回合（不得分），情景切换');
+  }else{
+    state.words[state.turn].push({c:'[跳过]',e:'skip',cat:'f',ok:false,at:Date.now()});
+    addLog('skip','🙈 '+who+' 查看答案后放弃本回合（不得分）');
+  }
+  flash('warn','🙈 '+who+' 本回合跳过（不得分），轮到 '+state.names[1-state.turn]);
+  state.turn=1-state.turn;
+  persist();render();focusInput();
+}
+function toggleKB(){
+  const c=document.getElementById('kbCard');
+  c.style.display=c.style.display==='none'?'':'none';
+  if(c.style.display!=='none'){renderKB();c.scrollIntoView({behavior:'smooth'})}
+}
+function renderKB(){
+  document.getElementById('kbFruitCnt').textContent=FRUITS.length;
+  document.getElementById('kbSeaCnt').textContent=FISHES.length;
+  const tag=(x,cls)=>'<span class="kb-tag '+cls+(state.all.has('w::'+normCn(x.c))?' used':'')+'">'+esc(x.c)+'<span class="en"> / '+esc(x.e)+'</span></span>';
+  document.getElementById('kbFruit').innerHTML=FRUITS.map(x=>tag(x,'f')).join('');
+  document.getElementById('kbSea').innerHTML=FISHES.map(x=>tag(x,'s')).join('');
+}
+function endGame(){
+  if(!state.started){toast('比赛还没开始','err');return}
+  const s1=state.scores[0], s2=state.scores[1];
+  let res;
+  if(s1>s2)res='<span class="a">'+esc(state.names[0])+'</span> 🏆 获胜！';
+  else if(s2>s1)res='<span class="b">'+esc(state.names[1])+'</span> 🏆 获胜！';
+  else res='🤝 平局！';
+  document.getElementById('resText').innerHTML=res;
+  document.getElementById('resDetail').textContent=state.names[0]+': '+s1+' 分  vs  '+state.names[1]+': '+s2+' 分 · 当前模式：'+(state.gmode==='en'?'🗣️英语对话(含语法检测)':(state.diff==='hard'?'🔥困难词汇':'🌿普通词汇'));
+  document.getElementById('resultModal').classList.add('show');
+  addLog('','🏁 结算：'+s1+' vs '+s2);
+  persist();
+}
+function closeResult(){document.getElementById('resultModal').classList.remove('show')}
+function restart(){
+  if(!confirm('重新开始？比分、词汇与回合将清空（保留玩家名称与模式）。'))return;
+  state.started=false;state.turn=0;state.scores=[0,0];
+  state.words=[[],[]];state.all=new Set();state.logs=[];state.scIdx=-1;state.usedSc.clear();
+  document.getElementById('setupCard').style.display='';
+  ['nameInput','cnInput','enInput','ansInput'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  clearFeedback();
+  document.getElementById('sugBox').classList.remove('show');
+  persist();render();
+  toast('🔄 已重置，选择模式后开始新比赛','ok');
+}
+function clearData(){
+  if(!confirm('清空全部本地数据（含玩家名称与历史）？'))return;
+  localStorage.removeItem(LS_DATA);
+  state.started=false;state.turn=0;state.names=['玩家 A','玩家 B'];
+  state.gmode='words';state.diff='normal';state.scores=[0,0];
+  state.words=[[],[]];state.all=new Set();state.logs=[];state.scIdx=-1;state.usedSc.clear();
+  document.getElementById('setupCard').style.display='';
+  document.querySelector('input[name="gmode"][value="words"]').checked=true;
+  const dv=document.querySelector('input[name="diff"][value="normal"]');if(dv)dv.checked=true;
+  applyModeUI();
+  document.getElementById('p1Name').value='玩家 A';
+  document.getElementById('p2Name').value='玩家 B';
+  ['nameInput','cnInput','enInput','ansInput'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  persist();render();
+  toast('🗑 已清空全部数据','ok');
+}
+function render(){
+  const s1=state.scores[0], s2=state.scores[1];
+  document.getElementById('name1').textContent=state.names[0];
+  document.getElementById('name2').textContent=state.names[1];
+  document.getElementById('listName1').textContent=state.names[0];
+  document.getElementById('listName2').textContent=state.names[1];
+  document.getElementById('score1').innerHTML=s1+' <small>分</small>';
+  document.getElementById('score2').innerHTML=s2+' <small>分</small>';
+  document.getElementById('words1').textContent=lastText(0);
+  document.getElementById('words2').textContent=lastText(1);
+  document.getElementById('listCnt1').textContent='('+state.words[0].length+')';
+  document.getElementById('listCnt2').textContent='('+state.words[1].length+')';
+  const active=state.started?state.turn:-1;
+  document.getElementById('card1').classList.toggle('active',active===0);
+  document.getElementById('card2').classList.toggle('active',active===1);
+  const tb=document.getElementById('turnBanner');
+  tb.className='turn-banner '+(state.turn===0?'p1':'p2');
+  tb.textContent=state.started?('👉 当前回合：'+state.names[state.turn]):'⏳ 输入玩家名称后点击「开始比赛」';
+  renderChips(0,'chips1');renderChips(1,'chips2');renderLog();updateScenario();applyModeUI();
+  if(document.getElementById('kbCard').style.display!=='none')renderKB();
+}
+function lastText(i){
+  const w=state.words[i];
+  if(!w.length)return '尚未出招';
+  const x=w[w.length-1];
+  if(x.text!==undefined)return (x.ok?'最近：':'最近(跳过)：')+x.text;
+  return (x.ok?'最近：':'最近(跳过)：')+x.c+(state.diff==='hard'?(' / '+x.e):'');
+}
+function renderChips(i,elId){
+  const box=document.getElementById(elId);
+  const w=state.words[i];
+  if(!w.length){box.innerHTML='<div class="empty">暂无</div>';return}
+  box.innerHTML=w.map((x,k)=>{
+    if(x.text!==undefined){
+      return '<span class="chip '+(x.ok?'s':'skip')+'"><span class="idx">#'+(k+1)+'</span>'+(x.ok?'🗣️ ':'🙈 ')+esc(x.text)+'</span>';
+    }
+    return '<span class="chip '+(x.ok?(x.cat==='f'?'f':'s'):'skip')+'"><span class="idx">#'+(k+1)+'</span>'+catEmoji(x.cat)+' '+esc(x.c)+
+      (state.diff==='hard'&&x.ok?'<span class="en"> / '+esc(x.e)+'</span>':'')+'</span>';
+  }).join('');
+}
+function toggleTheme(){
+  const d=document.documentElement.classList.toggle('dark');
+  localStorage.setItem(LS_THEME,d?'dark':'light');
+  syncTheme();
+}
+function syncTheme(){
+  document.getElementById('themeBtn').textContent=document.documentElement.classList.contains('dark')?'☀ 日间':'🌙 夜间';
+}
+let toastTimer=null;
+function toast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='show'+(type?' '+type:'');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.className=''},2600);
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
+['nameInput','cnInput','enInput','ansInput'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submitTurn()}});
+  el.addEventListener('input',clearFeedback);
+});
+document.getElementById('p1Name').addEventListener('keydown',e=>{if(e.key==='Enter')startGame()});
+document.getElementById('p2Name').addEventListener('keydown',e=>{if(e.key==='Enter')startGame()});
+document.getElementById('card1').addEventListener('dblclick',()=>rename(0));
+document.getElementById('card2').addEventListener('dblclick',()=>rename(1));
+function rename(i){
+  const v=prompt('修改玩家 '+(i+1)+' 名称',state.names[i]);
+  if(v&&v.trim()){state.names[i]=v.trim().slice(0,12);persist();render()}
+}
+load();
+</script>
+</body>
+</html>
