@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>双人双模式智能竞技游戏（500+水果鱼类知识库 + 语法检测英语对话）</title>
+<style>
+:root{
+  --p1:#f59e0b;--p2:#0ea5e9;--fruit:#22c55e;--sea:#0ea5e9;--fire:#ef4444;--purple:#8b5cf6;
+  --bg:#fffaf0;--panel:#ffffff;--text:#1b2a3a;--muted:#7286a0;--border:#ffe6c2;
+  --err:#ef4444;--ok:#16a34a;--shadow:0 6px 22px rgba(245,158,11,.14);
+}
+:root.dark{--bg:#12131a;--panel:#1b1e28;--text:#eef2f7;--muted:#93a1b5;--border:#2c3242;--shadow:0 6px 22px rgba(0,0,0,.4)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:
+  radial-gradient(900px 300px at 8% -5%, rgba(251,191,36,.25), transparent),
+  radial-gradient(900px 300px at 95% -5%, rgba(56,189,248,.25), transparent),
+  var(--bg);color:var(--text);min-height:100vh;transition:.4s}
+body.mode-en{background:
+  radial-gradient(900px 300px at 8% -5%, rgba(139,92,246,.28), transparent),
+  radial-gradient(900px 300px at 95% -5%, rgba(56,189,248,.22), transparent),
+  var(--bg)}
+body.hard{background:
+  radial-gradient(700px 260px at 0% -3%, rgba(239,68,68,.3), transparent),
+  radial-gradient(700px 260px at 100% -3%, rgba(249,115,22,.26), transparent),
+  radial-gradient(800px 300px at 50% 110%, rgba(245,158,11,.16), transparent), var(--bg)}
+.container{max-width:1060px;margin:0 auto;padding:18px 16px 40px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 0 14px}
+.logo{font-weight:900;font-size:21px;background:linear-gradient(90deg,var(--p1),var(--p2));-webkit-background-clip:text;background-clip:text;color:transparent}
+body.mode-en .logo{background:linear-gradient(90deg,var(--purple),var(--p2));-webkit-background-clip:text;background-clip:text}
+.sub{color:var(--muted);font-size:12.5px;width:100%}
+.spacer{flex:1}
+.btn{padding:9px 16px;border-radius:11px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:13.5px;cursor:pointer;transition:.15s;white-space:nowrap;font-weight:700}
+.btn:hover{border-color:var(--p2);color:var(--p2)}
+.btn.primary{background:linear-gradient(90deg,var(--p1),var(--p2));border:none;color:#fff}
+.btn.primary:hover{opacity:.9;color:#fff}
+.btn.danger{color:var(--err)}.btn.danger:hover{border-color:var(--err);color:var(--err)}
+.btn.hintbtn{border-color:var(--fruit);color:var(--fruit)}
+.btn.hintbtn:hover{background:color-mix(in srgb,var(--fruit) 12%, var(--panel))}
+.btn.answerbtn{background:linear-gradient(90deg,#f97316,#ef4444);border:none;color:#fff}
+.btn.answerbtn:hover{opacity:.9;color:#fff}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px;transition:.3s}
+body.hard .card.play-zone{border-color:color-mix(in srgb,var(--fire) 45%, var(--border));box-shadow:0 6px 26px rgba(239,68,68,.18)}
+body.mode-en .card.play-zone{border-color:color-mix(in srgb,var(--purple) 45%, var(--border));box-shadow:0 6px 26px rgba(139,92,246,.16)}
+.setup-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.setup-row .f{flex:1;min-width:160px}
+.setup-row label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px;font-weight:700}
+.setup-row input{width:100%;padding:12px 14px;border-radius:12px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;outline:none}
+.setup-row input:focus{border-color:var(--p2)}
+.game-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.gt{position:relative}
+.gt input{position:absolute;opacity:0;pointer-events:none}
+.gt .tb{display:block;padding:11px 18px;border-radius:12px;border:2.5px solid var(--border);cursor:pointer;font-weight:800;font-size:14px;background:var(--panel);transition:.2s}
+.gt .tb .sm{display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-top:3px}
+.gt input:checked + .tb.t-words{border-color:var(--fruit);background:color-mix(in srgb,var(--fruit) 10%, var(--panel));box-shadow:0 0 0 4px color-mix(in srgb,var(--fruit) 14%, transparent)}
+.gt input:checked + .tb.t-en{border-color:var(--purple);background:color-mix(in srgb,var(--purple) 10%, var(--panel));box-shadow:0 0 0 4px color-mix(in srgb,var(--purple) 16%, transparent)}
+.diff-tabs{display:flex;gap:8px;margin-bottom:10px}
+.dt{position:relative}
+.dt input{position:absolute;opacity:0;pointer-events:none}
+.dt .db{display:block;padding:8px 16px;border-radius:10px;border:2px solid var(--border);cursor:pointer;font-weight:800;font-size:13px;background:var(--panel);transition:.2s}
+.dt input:checked + .db.d-n{border-color:var(--fruit);color:var(--fruit);background:color-mix(in srgb,var(--fruit) 12%, var(--panel))}
+.dt input:checked + .db.d-h{border-color:var(--fire);color:var(--fire);background:color-mix(in srgb,var(--fire) 10%, var(--panel));animation:flameB 1.4s infinite}
+@keyframes flameB{0%,100%{box-shadow:0 0 0 3px rgba(239,68,68,.15)}50%{box-shadow:0 0 0 8px rgba(249,115,22,.1)}}
+.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:12px}
+@media(max-width:700px){.scoreboard{grid-template-columns:1fr}}
+.score-card{border-radius:16px;padding:16px;border:3px solid var(--border);background:var(--panel);transition:.25s}
+.score-card.p1{border-color:color-mix(in srgb,var(--p1) 55%, var(--border))}
+.score-card.p2{border-color:color-mix(in srgb,var(--p2) 55%, var(--border))}
+.score-card.p1.active{color:var(--p1);animation:glow1 1.4s infinite}
+.score-card.p2.active{color:var(--p2);animation:glow2 1.4s infinite}
+@keyframes glow1{0%,100%{box-shadow:0 0 0 3px color-mix(in srgb,var(--p1) 18%, transparent)}50%{box-shadow:0 0 0 9px color-mix(in srgb,var(--p1) 10%, transparent)}}
+@keyframes glow2{0%,100%{box-shadow:0 0 0 3px color-mix(in srgb,var(--p2) 18%, transparent)}50%{box-shadow:0 0 0 9px color-mix(in srgb,var(--p2) 10%, transparent)}}
+.score-card .name{font-weight:800;font-size:15.5px;color:var(--text);display:flex;align-items:center;gap:8px}
+.score-card .name .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.score-card.p1 .name .dot{background:var(--p1)}
+.score-card.p2 .name .dot{background:var(--p2)}
+.score-card .score{font-size:46px;font-weight:900;line-height:1.1;color:inherit}
+.score-card .score small{font-size:14px;color:var(--muted);font-weight:700}
+.score-card .words{font-size:11.5px;color:var(--muted);margin-top:4px}
+.vs{display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:var(--muted)}
+.turn-banner{text-align:center;padding:14px;border-radius:14px;font-size:18px;font-weight:900;margin-bottom:14px;border:2px dashed var(--border)}
+.turn-banner.p1{background:color-mix(in srgb,var(--p1) 14%, var(--panel));border-color:var(--p1);color:var(--p1)}
+.turn-banner.p2{background:color-mix(in srgb,var(--p2) 14%, var(--panel));border-color:var(--p2);color:var(--p2)}
+.scenario{display:none;border:2.5px solid color-mix(in srgb,var(--purple) 55%, var(--border));border-radius:14px;padding:14px;margin-bottom:12px;background:color-mix(in srgb,var(--purple) 7%, var(--panel))}
+body.mode-en .scenario{display:block;animation:pop .3s}
+.scenario .tag{display:inline-block;font-size:11.5px;font-weight:800;color:var(--purple);background:color-mix(in srgb,var(--purple) 15%, var(--panel));border-radius:999px;padding:3px 11px;margin-bottom:8px}
+.scenario .sys{font-family:Georgia,'Times New Roman',serif;font-size:16.5px;font-weight:700;color:var(--text);line-height:1.5}
+.scenario .sys::before{content:'🗣️ System: '}
+.scenario .req{font-size:12.5px;color:var(--muted);margin-top:8px}
+.scenario .req b{color:var(--purple)}
+.input-row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
+.single-input{flex:1;min-width:170px}
+.dual-input{flex:1;display:none;gap:10px;flex-wrap:wrap;min-width:250px}
+body.hard .dual-input{display:flex}
+body.hard .single-input{display:none}
+body.mode-en .single-input,body.mode-en .dual-input{display:none}
+body.mode-en .en-input{display:flex}
+.en-input{display:none;flex:1;min-width:250px}
+#nameInput,#cnInput,#enInput,#ansInput{width:100%;padding:14px 15px;border-radius:12px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-size:16px;outline:none;transition:.15s}
+#enInput,#ansInput{font-family:Georgia,'Times New Roman',serif}
+#nameInput:focus,#cnInput:focus,#enInput:focus,#ansInput:focus{border-color:var(--p2)}
+#nameInput.shake,#cnInput.shake,#enInput.shake,#ansInput.shake{animation:shake .4s;border-color:var(--err)!important}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.cat-select{display:flex;gap:8px}
+.cat-radio{position:relative}
+.cat-radio input{position:absolute;opacity:0;pointer-events:none}
+.cat-radio span{display:inline-flex;align-items:center;gap:6px;padding:13px 16px;border-radius:12px;border:2px solid var(--border);background:var(--bg);cursor:pointer;font-size:14px;font-weight:700;transition:.15s;color:var(--text)}
+.cat-radio input:checked + span.c-f{border-color:var(--fruit);background:color-mix(in srgb,var(--fruit) 14%, var(--bg));color:var(--fruit)}
+.cat-radio input:checked + span.c-s{border-color:var(--sea);background:color-mix(in srgb,var(--sea) 14%, var(--bg));color:var(--sea)}
+#submitBtn{padding:14px 22px;font-size:15px}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.err-box,.ok-box,.warn-box{display:none;margin-top:12px;border-radius:12px;padding:12px 14px;font-weight:800;font-size:14.5px;animation:pop .25s}
+.err-box.show,.ok-box.show,.warn-box.show{display:block}
+.err-box{background:#fef2f2;border:2px solid var(--err);color:var(--err)}
+.ok-box{background:#f0fdf4;border:2px solid var(--ok);color:var(--ok)}
+.warn-box{background:#fff7ed;border:2px solid #f97316;color:#c2410c}
+:root.dark .err-box{background:#3a1420}
+:root.dark .ok-box{background:#122e1c}
+:root.dark .warn-box{background:#3a2410}
+@keyframes pop{from{transform:scale(.96);opacity:.4}to{transform:scale(1);opacity:1}}
+.sug-box{display:none;margin-top:12px;border:2px dashed var(--fruit);border-radius:12px;padding:12px;background:color-mix(in srgb,var(--fruit) 7%, var(--panel))}
+.sug-box.show{display:block;animation:pop .25s}
+body.hard .sug-box{border-color:var(--fire);background:color-mix(in srgb,var(--fire) 6%, var(--panel))}
+.sug-box h5{font-size:13px;color:var(--fruit);margin-bottom:8px}
+body.hard .sug-box h5{color:var(--fire)}
+.sug-chips{display:flex;flex-wrap:wrap;gap:7px}
+.sug-chip{padding:7px 13px;border-radius:999px;font-size:13.5px;font-weight:700;border:1.5px solid color-mix(in srgb,var(--fruit) 55%, var(--border));background:var(--panel);color:var(--fruit);cursor:pointer;transition:.15s}
+.sug-chip:hover{background:var(--fruit);color:#fff}
+body.hard .sug-chip{border-color:color-mix(in srgb,var(--fire) 55%, var(--border));color:var(--fire)}
+body.hard .sug-chip:hover{background:var(--fire);color:#fff}
+.sug-chip .en{font-family:Georgia,serif;opacity:.75;font-weight:600}
+.lists{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.lists{grid-template-columns:1fr}}
+.list-card{border:2px solid var(--border);border-radius:14px;padding:14px;background:var(--panel)}
+.list-card.p1{border-color:color-mix(in srgb,var(--p1) 50%, var(--border))}
+.list-card.p2{border-color:color-mix(in srgb,var(--p2) 50%, var(--border))}
+.list-card h4{font-size:14px;margin-bottom:10px;display:flex;gap:8px;align-items:center}
+.list-card.p1 h4{color:var(--p1)}
+.list-card.p2 h4{color:var(--p2)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;min-height:56px}
+.chip{padding:6px 12px;border-radius:999px;font-size:13.5px;font-weight:700;border:1.5px solid var(--border);background:var(--bg);animation:pop .25s;max-width:100%;word-break:break-word}
+.chip.f{border-color:color-mix(in srgb,var(--fruit) 55%, var(--border));color:var(--fruit)}
+.chip.s{border-color:color-mix(in srgb,var(--sea) 55%, var(--border));color:var(--sea)}
+.chip.skip{border-color:color-mix(in srgb,var(--fire) 55%, var(--border));color:var(--fire);text-decoration:line-through;opacity:.85}
+.chip .en{font-family:Georgia,serif;font-weight:600;opacity:.7;margin-left:5px;font-size:12.5px}
+.chip .idx{font-size:10px;color:var(--muted);margin-right:4px}
+.empty{color:var(--muted);font-size:13px;width:100%;padding:14px 0;text-align:center}
+.log{margin-top:14px;border-top:1px dashed var(--border);padding-top:10px;font-size:12.5px;color:var(--muted);max-height:160px;overflow:auto}
+.log div{padding:3px 0;border-bottom:1px dashed color-mix(in srgb,var(--border) 60%, transparent)}
+.log .dup{color:var(--err);font-weight:800}
+.log .skip{color:var(--fire);font-weight:800}
+.log .hit{color:var(--ok);font-weight:700}
+.kb-search{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.kb-search input{flex:1;min-width:180px;padding:9px 13px;border-radius:10px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;outline:none}
+.kb-search input:focus{border-color:var(--p2)}
+.kb-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-height:280px;overflow:auto;padding:2px}
+.kb-tag{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--muted)}
+.kb-tag.f{border-color:color-mix(in srgb,var(--fruit) 45%, var(--border));color:var(--fruit)}
+.kb-tag.s{border-color:color-mix(in srgb,var(--sea) 45%, var(--border));color:var(--sea)}
+.kb-tag.used{opacity:.4;text-decoration:line-through}
+.kb-tag .en{font-family:Georgia,serif;font-size:11px;opacity:.7;margin-left:3px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:60;padding:18px}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:18px;max-width:560px;width:100%;padding:24px;text-align:center;box-shadow:var(--shadow);animation:pop .3s;max-height:90vh;overflow:auto}
+.modal h2{font-size:22px;margin-bottom:10px;background:linear-gradient(90deg,var(--p1),var(--p2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.modal .ans-title{font-size:15px;font-weight:800;color:var(--fire);margin:8px 0}
+.modal .ans-en{font-family:Georgia,serif;font-size:18px;font-weight:700;color:var(--text);background:var(--bg);border:1.5px dashed var(--border);border-radius:10px;padding:12px;margin:8px 0;word-break:break-word}
+.modal .ans-tip{font-size:12.5px;color:var(--muted);white-space:pre-line;text-align:left}
+.modal .res{font-size:34px;font-weight:900;margin:10px 0 16px}
+.modal .res .a{color:var(--p1)}.modal .res .b{color:var(--p2)}
+.modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--panel);border:1px solid var(--border);color:var(--text);padding:11px 20px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;z-index:99;pointer-events:none;box-shadow:var(--shadow);max-width:90vw;font-weight:700}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:var(--ok);color:var(--ok)}
+#toast.err{border-color:var(--err);color:var(--err)}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <div class="logo">⚔️ 双人双模式智能竞技游戏</div>
+      <div class="sub">📚 500+ 水果鱼类中英知识库（Map/Set O(1) 检索）· 模式一：词汇战（普通/🔥困难）· 模式二：🗣️ 英语对话（含 ⚠️ 语法诊断引擎）· 💡 答不上免分跳过 · 全局查重 · LocalStorage 自动保存</div>
+    </div>
+    <span class="spacer"></span>
+    <button class="btn" onclick="toggleTheme()" id="themeBtn">🌙 夜间</button>
+    <button class="btn" onclick="endGame()">🏁 结算</button>
+    <button class="btn danger" onclick="restart()">🔄 重新开始</button>
+    <button class="btn danger" onclick="clearData()">🗑 清空数据</button>
+  </header>
+
+  <div class="card" id="setupCard">
+    <div class="game-tabs">
+      <label class="gt">
+        <input type="radio" name="gmode" value="words" checked onchange="setGMode('words')">
+        <span class="tb t-words">🎮 模式一：水果与鱼类词汇战<span class="sm">普通模式校验中文或英文 / 🔥困难模式中英同输</span></span>
+      </label>
+      <label class="gt">
+        <input type="radio" name="gmode" value="en" onchange="setGMode('en')">
+        <span class="tb t-en">🗣️ 模式二：英语对话比赛<span class="sm">随机场景 + 关键词判定 + ⚠️ 语法诊断引擎</span></span>
+      </label>
+    </div>
+    <div class="diff-tabs" id="diffTabs">
+      <label class="dt"><input type="radio" name="diff" value="normal" onchange="setDiff('normal')"><span class="db d-n">🌿 普通模式（中/英均可）</span></label>
+      <label class="dt"><input type="radio" name="diff" value="hard" onchange="setDiff('hard')"><span class="db d-h">🔥 困难模式（中文 + English 同输）</span></label>
+    </div>
+    <div class="setup-row">
+      <div class="f"><label>🟠 玩家 1 名称</label><input id="p1Name" placeholder="玩家 A" maxlength="12"></div>
+      <div class="f"><label>🔵 玩家 2 名称</label><input id="p2Name" placeholder="玩家 B" maxlength="12"></div>
+      <button class="btn primary" onclick="startGame()" style="padding:13px 24px">🎮 开始比赛</button>
+    </div>
+    <div class="hint">💡 开赛后仍可切换模式与难度；回车或点击开始；双击计分卡可改名 · 知识库 <b id="kbTotal"></b> 条（O(1) Map/Set 检索）</div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="score-card p1" id="card1">
+      <div class="name"><span class="dot"></span><span id="name1">玩家 A</span></div>
+      <div class="score" id="score1">0 <small>分</small></div>
+      <div class="words" id="words1">尚未出招</div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="score-card p2" id="card2">
+      <div class="name"><span class="dot"></span><span id="name2">玩家 B</span></div>
+      <div class="score" id="score2">0 <small>分</small></div>
+      <div class="words" id="words2">尚未出招</div>
+    </div>
+  </div>
+
+  <div class="card play-zone" style="margin-top:16px">
+    <div class="turn-banner p1" id="turnBanner">👉 当前回合：玩家 A</div>
+
+    <div class="scenario">
+      <span class="tag" id="scTag">情景 1</span>
+      <div class="sys" id="scLine">Excuse me, where is the nearest station?</div>
+      <div class="req">请当前玩家用<b>符合该情景的英文</b>作答（≥2 个单词，语法正确，与情景关键词/句式相关）· 回车提交</div>
+    </div>
+
+    <div class="input-row">
+      <div class="single-input"><input id="nameInput" placeholder="输入中文或英文名称（如：苹果 / Apple）..." autocomplete="off"></div>
+      <div class="dual-input">
+        <input id="cnInput" placeholder="中文名（如：苹果）" autocomplete="off" style="flex:1;min-width:130px">
+        <input id="enInput" placeholder="English (如：Apple)" autocomplete="off" style="flex:1;min-width:130px">
+      </div>
+      <div class="en-input"><input id="ansInput" placeholder="Your English answer... (e.g. Go straight and turn left.)" autocomplete="off"></div>
+      <div class="cat-select" id="catSelect">
+        <label class="cat-radio"><input type="radio" name="cat" value="f" checked><span class="c-f">🍎 水果</span></label>
+        <label class="cat-radio"><input type="radio" name="cat" value="s"><span class="c-s">🐟 鱼类</span></label>
+      </div>
+      <button class="btn primary" id="submitBtn" onclick="submitTurn()">提交 ⚔</button>
+    </div>
+
+    <div class="btnrow">
+      <button class="btn hintbtn" id="hintBtn" onclick="showSuggestions()">💡 查看提示</button>
+      <button class="btn answerbtn" onclick="showAnswer()">💡 答不上？查看提示/答案</button>
+      <button class="btn" id="kbBtn" onclick="toggleKB()">📚 知识库图鉴</button>
+    </div>
+
+    <div class="hint" id="ruleHint"></div>
+    <div class="err-box" id="errBox"></div>
+    <div class="ok-box" id="okBox"></div>
+    <div class="warn-box" id="warnBox"></div>
+
+    <div class="sug-box" id="sugBox">
+      <h5 id="sugTitle">💡 提示（点击直接填入，均为尚未被使用的词）</h5>
+      <div class="sug-chips" id="sugChips"></div>
+    </div>
+
+    <div class="lists" style="margin-top:16px">
+      <div class="list-card p1">
+        <h4>🟠 <span id="listName1">玩家 A</span> 的出招 <span style="color:var(--muted);font-weight:600" id="listCnt1">(0)</span></h4>
+        <div class="chips" id="chips1"><div class="empty">暂无</div></div>
+      </div>
+      <div class="list-card p2">
+        <h4>🔵 <span id="listName2">玩家 B</span> 的出招 <span style="color:var(--muted);font-weight:600" id="listCnt2">(0)</span></h4>
+        <div class="chips" id="chips2"><div class="empty">暂无</div></div>
+      </div>
+    </div>
+
+    <div class="log" id="log"><div>暂无历史记录</div></div>
+  </div>
+
+  <div class="card" id="kbCard" style="display:none">
+    <h4 style="font-size:14.5px;margin-bottom:6px">📚 500+ 知识库图鉴（划线 = 已被说过 · 支持中英文搜索）</h4>
+    <div style="font-size:12px;color:var(--muted)">🍎 水果 <b id="kbFruitCnt"></b> 种 · 🐟 鱼类 <b id="kbSeaCnt"></b> 种 · 合计 <b id="kbAllCnt"></b> 条</div>
+    <div class="kb-search">
+      <input id="kbSearch" placeholder="🔍 搜索中文或英文（如：苹果 / Apple）" oninput="renderKB()">
+      <button class="btn" onclick="kbFilter='all';document.getElementById('kbSearch').value='';renderKB()">全部</button>
+      <button class="btn" onclick="kbFilter='f';renderKB()">🍎</button>
+      <button class="btn" onclick="kbFilter='s';renderKB()">🐟</button>
+    </div>
+    <div class="kb-grid" id="kbList"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="answerModal">
+  <div class="modal">
+    <h2 id="amTitle">💡 提示 / 参考答案</h2>
+    <div class="ans-title" id="amTag"></div>
+    <div class="ans-en" id="amEn"></div>
+    <div class="ans-tip" id="amTip"></div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn" onclick="closeAnswer(false)">关闭（继续答题）</button>
+      <button class="btn answerbtn" onclick="closeAnswer(true)">🙈 放弃本回合（不得分，跳过）</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="resultModal">
+  <div class="modal">
+    <h2>🏆 比赛结算</h2>
+    <div class="res" id="resText"></div>
+    <div style="color:var(--muted);font-size:13.5px" id="resDetail"></div>
+    <div class="modal-actions" style="margin-top:18px">
+      <button class="btn" onclick="closeResult()">继续比赛</button>
+      <button class="btn primary" onclick="closeResult();restart()">🔄 再来一局</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   📚 500+ 水果 & 鱼类中英双语知识库（紧凑字符串解析 → Map/Set O(1)）
+   格式: 中文1|English1;中文2|English2;...
+   ============================================================ */
+const FRUIT_SRC=
+"苹果|Apple;香蕉|Banana;榴莲|Durian;火龙果|Dragon Fruit;葡萄|Grape;西瓜|Watermelon;草莓|Strawberry;蓝莓|Blueberry;芒果|Mango;菠萝|Pineapple;樱桃|Cherry;柠檬|Lemon;橙子|Orange;柚子|Pomelo;梨|Pear;桃子|Peach;猕猴桃|Kiwi;哈密瓜|Hami Melon;椰子|Coconut;荔枝|Lychee;龙眼|Longan;山竹|Mangosteen;石榴|Pomegranate;柿子|Persimmon;枇杷|Loquat;杨梅|Waxberry;桑葚|Mulberry;无花果|Fig;百香果|Passion Fruit;牛油果|Avocado;莲雾|Wax Apple;番石榴|Guava;菠萝蜜|Jackfruit;椰枣|Date;脐橙|Navel Orange;西柚|Grapefruit;青梅|Green Plum;杨桃|Starfruit;木瓜|Papaya;山楂|Hawthorn;人参果|Pepino;雪莲果|Yacon;黑加仑|Blackcurrant;树莓|Raspberry;蔓越莓|Cranberry;沙棘|Sea Buckthorn;黄皮果|Wampee;甘蔗|Sugarcane;橄榄|Olive;金桔|Kumquat;红毛丹|Rambutan;巨峰葡萄|Kyoho Grape;阳光玫瑰|Shine Muscat;麝香葡萄|Muscat;克伦生|Crimson Seedless;红提|Red Globe;青提|Green Grape;夏黑|Summer Black;玫瑰香|Muscat Hamburg;蓝莓王|Big Blueberry;高丛蓝莓|Highbush Blueberry;兔眼蓝莓|Rabbiteye Blueberry;矮丛蓝莓|Lowbush Blueberry;智利车厘子|Chilean Cherry;烟台大樱桃|Yantai Cherry;美国车厘子|American Cherry;冰草莓|Ice Strawberry;白草莓|White Strawberry;粉草莓|Pink Berry;淡雪草莓|Awayuki;章姬|Yukihomari;红颜|Benihoppe;丰香|Toyonaka;甜查理|Sweet Charlie;卡麦罗莎|Camarosa;拉宾特|Lapins;先锋|Pioneer;美早|Tieton;俄亥俄|Ohio;黑珍珠|Black Pearl;黄桃|Yellow Peach;水蜜桃|honey peach;蟠桃|Flat Peach;油桃|Nectarine;鹰嘴桃|Eagle Beak Peach;冬枣|Winter Jujube;大枣|Big Jujube;酸枣|Sour Jujube;椰枣王|Medjool Date;金丝枣|Golden Date;阿克苏苹果|Aksu Apple;红富士|Red Fuji;嘎啦|Gala;蛇果|Red Delicious;国光|Jonathan;青苹果|Green Apple;花牛|Huaniu;库尔勒香梨|Korla Pear;砀山梨|Dangshan Pear;雪梨|Snow Pear;丰水梨|Hosui Pear;秋月梨|Akizuki Pear;南果梨|Nanguo Pear;香梨|Fragrant Pear;啤梨|Bartlett Pear;库尔勒|Korla Pear;沙糖橘|Sugar Orange;沃柑|Wogan;茂谷柑|Murcott;脐橙王|Navel King;血橙|Blood Orange;柠檬王|Lemon King;青柠|Lime;香水柠檬|Perfume Lemon;尤力克|Eureka Lemon;贡橙|Gonggan;耙耙柑|Pakan;不知火|Decopon;丑橘|Ugly Orange;葡萄柚王|Grapefruit King;红枣|Red Date;灰枣|Grey Date;骏枣|Jun Date;若羌枣|Ruoqiang Date;哈密大枣|Hami Date;石榴王|Pomegranate King;突尼斯软籽|Tunisia Soft Seed;河阴石榴|Heyin Pomegranate;会理石榴|Huili Pomegranate;白软籽|White Soft Seed;凤梨|Pineapple;香水菠萝|Perfume Pineapple;巴厘菠萝|Bali Pineapple;神湾菠萝|Shenwan Pineapple;菠萝蜜王|Jackfruit King;马来菠萝蜜|Malay Jackfruit;干包|Dry Pulp;湿包|Wet Pulp;泰国榴莲|Thai Durian;马来榴莲|Malaysian Durian;猫山王|Musang King;金枕|Monthom;黑刺|Black Thorn;干尧|Kanyao;甲仑|Ganyao;青尼|Chanee;托曼尼|Tonmai;苏丹王|Sultan;液氮榴莲|Liquid Nitrogen Durian;榴莲肉|Durian Pulp;山竹王|Mangosteen King;泰国山竹|Thai Mangosteen;竹芋|Arrowroot;莲子|Lotus Seed;百合|Lily Bulb;荸荠|Water Chestnut;菱角|Water Caltrop;慈姑|Arrowhead;茭白|Wild Rice Stem;芦笋|Asparagus;秋葵|Okra;豌豆|Pea;四季豆|Green Bean;荷兰豆|Snow Pea;甜豆|Sweet Pea;毛豆|Edamame;蚕豆|Broad Bean;豇豆|Yardlong Bean;扁豆|Hyacinth Bean;芸豆|Kidney Bean;鹰嘴豆|Chickpea;黄豆|Soybean;黑豆|Black Soybean;绿豆|Mung Bean;红小豆|Adzuki Bean;红豆|Red Bean;腰果|Cashew;开心果|Pistachio;榛子|Hazelnut;松子|Pine Nut;杏仁|Almond;核桃|Walnut;夏威夷果|Macadamia;花生|Peanut;瓜子|Sunflower Seed;板栗|Chestnut;银杏|Ginkgo Nut;红瓜子|Red Melon Seed;白瓜子|White Melon Seed;南瓜子|Pumpkin Seed;西瓜子|Watermelon Seed;水果拼盘|Fruit Platter;果切|Cut Fruit;什锦水果|Mixed Fruit;果干|Dried Fruit;果脯|Candied Fruit;果酱|Fruit Jam;果汁|Fruit Juice;果酒|Fruit Wine;果醋|Fruit Vinegar;罐头水果|Canned Fruit;冷冻水果|Frozen Fruit;鲜果|Fresh Fruit;有机苹果|Organic Apple;有机草莓|Organic Strawberry;有机蓝莓|Organic Blueberry;有机葡萄|Organic Grape;有机橙|Organic Orange;有机柠檬|Organic Lemon;有机牛油果|Organic Avocado;有机香蕉|Organic Banana;有机芒果|Organic Mango;有机猕猴桃|Organic Kiwi;有机樱桃|Organic Cherry;有机梨|Organic Pear;有机桃|Organic Peach;有机石榴|Organic Pomegranate;有机椰子|Organic Coconut;有机菠萝|Organic Pineapple;有机西瓜|Organic Watermelon;有机柿子|Organic Persimmon;有机荔枝|Organic Lychee;有机龙眼|Organic Longan;有机山竹|Organic Mangosteen;有机榴莲|Organic Durian;有机百香果|Organic Passion Fruit;有机桑葚|Organic Mulberry;有机杨梅|Organic Waxberry;有机无花果|Organic Fig;有机橄榄|Organic Olive;有机甘蔗|Organic Sugarcane;有机山楂|Organic Hawthorn;有机枇杷|Organic Loquat;有机番石榴|Organic Guava;有机木瓜|Organic Papaya;有机杨桃|Organic Starfruit;有机金桔|Organic Kumquat;有机红毛丹|Organic Rambutan;有机椰枣|Organic Date;有机雪莲果|Organic Yacon;有机黑加仑|Organic Blackcurrant;有机树莓|Organic Raspberry;有机蔓越莓|Organic Cranberry;有机沙棘|Organic Sea Buckthorn;有机黄皮果|Organic Wampee;有机橄榄油果|Organic Olive;温带水果|Temperate Fruit;热带水果|Tropical Fruit;亚热带水果|Subtropical Fruit;寒带水果|Cold-zone Fruit;进口水果|Imported Fruit;国产水果|Domestic Fruit;季节水果|Seasonal Fruit;反季节|Off-season Fruit;有机种植|Organic Planting;无公害|Pollution-free;绿色食品|Green Food;地标产品|Geo-product;地理标志|Geo-indication;名优水果|Famous Fruit;特产水果|Specialty Fruit;礼品水果|Gift Fruit;水果篮|Fruit Basket;水果礼盒|Fruit Gift Box;水果批发|Fruit Wholesale;水果零售|Fruit Retail;水果店|Fruit Shop;水果市场|Fruit Market;水果超市|Fruit Supermarket;水果电商|Fruit E-commerce;水果配送|Fruit Delivery;水果拼单|Fruit Group Buy;水果优惠|Fruit Discount;水果新鲜度|Fruit Freshness;水果保质期|Fruit Shelf Life;水果催熟|Ripening;后熟|After-ripening;套袋|Bagging;疏花|Flower Thinning;疏果|Fruit Thinning;嫁接|Grafting;扦插|Cutting;压条|Layering;实生|Seedling;矮化|Dwarfing;密植|Close Planting;滴灌|Drip Irrigation;喷灌|Sprinkler Irrigation;水肥一体|Fertigation;大棚种植|Greenhouse Planting;露天种植|Open-field Planting;有机肥|Organic Fertilizer;生物防治|Biocontrol;物理防治|Physical Control;套网|Netting;预冷|Pre-cooling;冷链物流|Cold Chain;气调库|CA Storage;保鲜|Freshness Keeping;分选|Sorting;包装|Packaging;品牌化|Branding;果园|Orchard;果树|Fruit Tree;果农|Fruit Farmer;果核|Fruit Pit;果皮|Fruit Peel;果肉|Fruit Pulp;果糖|Fructose;葡萄糖|Glucose;蔗糖|Sucrose;维生素C|Vitamin C;膳食纤维|Dietary Fiber;抗氧化|Antioxidant;低GI|Low GI;高糖|High Sugar;低糖|Low Sugar;应季|In Season;反季水果|Off-season Fruit;有机认证|Organic Cert;绿色认证|Green Cert;无添加|No Additives;零农残|Zero Pesticide;甜度|Sweetness;脆度|Crispness;香气|Aroma;口感|Texture;风味|Flavor;卖相|Appearance;大小分级|Size Grading;重量称重|Weighing;论斤|By Catty;论个|By Piece;论箱|By Box;试吃|Tasting;采摘|Picking;现摘|Fresh Picked;直供|Direct Supply;产地直发|Origin Direct;冷链直达|Cold Direct;次日达|Next Day;当日达|Same Day;坏果包赔|Damage Guarantee;无忧退换|Easy Return;果园认领|Orchard Adopt;云种植|Cloud Planting;果树认养|Tree Adoption;观光采摘|U-pick;农家乐|Farm Stay;采摘节|Picking Festival;水果节|Fruit Festival;展销会|Expo;评比|Competition;金奖|Gold Award;银奖|Silver Award;优质奖|Quality Award;畅销款|Best Seller;新品|New Arrival;限量|Limited;典藏|Collector;经典|Classic;传统|Traditional;现代|Modern;创新|Innovative;复古|Retro;怀旧|Nostalgic;童年味道|Childhood Taste;妈妈做的|Homemade;手工采摘|Hand Picked; machine harvested|Machine Harvested;精选|Selected;严选|Strictly Selected;甄选|Curated;优选|Premium;特级|Extra Grade;一级|First Grade;二级|Second Grade;三级|Third Grade;统货|Bulk;混装|Mixed Pack;单果重|Single Weight;果径|Fruit Diameter;果形|Fruit Shape;圆果|Round Fruit;扁果|Flat Fruit;长果|Long Fruit;异形|Irregular;瑕疵|Defect;虫眼|Insect Hole;裂果|Cracking;日灼|Sunburn;冻害|Frost Damage;落果|Fruit Drop;大小年|Alternate Bearing;丰产|High Yield;稳产|Stable Yield;减产|Reduced Yield;绝收|Total Loss;病害|Disease;虫害|Pest;病毒病|Virus;真菌病|Fungal;细菌病|Bacterial;根腐病|Root Rot;炭疽病|Anthracnose;白粉病|Powdery Mildew;锈病|Rust;溃疡病|Canker;疫病|Blight;霉变|Moldy;腐烂|Rotten;变质|Spoiled;新鲜|Fresh;干瘪|Shriveled;饱满|Plump;多汁|Juicy;爽脆|Crunchy;绵软|Soft;细腻|Smooth;粗糙|Coarse;细腻果肉|Smooth Pulp;爆汁|Juicy Burst;果香四溢|Fruity Aroma;回味|Aftertaste;清甜|Mild Sweet;香甜|Sweet Fragrant;酸甜|Sweet Sour;甘甜|Honey Sweet;蜜甜|Honey Sweet;清脆|Crisp;化渣|Melting;无核|Seedless;少籽|Few Seeds;多籽|Many Seeds;硬核|Hard Pit;软核|Soft Pit;薄皮|Thin Skin;厚皮|Thick Skin;易剥|Easy Peel;难剥|Hard Peel;带皮吃|Eat with Peel;去皮吃|Peeled;切块|Sliced;榨汁|Juiced;做沙拉|In Salad;烘焙用|For Baking;甜品用|For Dessert;烹饪用|For Cooking;零食|Snack;餐前|Appetizer;餐后|Dessert;早餐|Breakfast;下午茶|Tea Time;野餐|Picnic;旅行装|Travel Pack;办公零食|Office Snack;儿童喜爱|Kids Favorite;老人适宜|Elderly Friendly;运动补能|Sports Energy;健身优选|Fitness Pick;减肥水果|Diet Fruit;美容养颜|Beauty;明目|Eye Care;润肺|Lung Care;健脾|Spleen Care;助消化|Digestion;通便|Laxative;降火|Cooling;去燥|Dehumidifying;解渴|Quenching;提神|Refreshing;安神|Calming;助眠|Sleep Aid;补血|Blood Nourish;养颜|Beauty Care;排毒|Detox;抗衰|Anti-aging;增强免疫|Immunity;心血管|Cardio;血压|Blood Pressure;血糖|Blood Sugar;血脂|Blood Fat;胆固醇|Cholesterol;热量低|Low Calorie;低脂|Low Fat;零脂肪|Fat Free;无糖|Sugar Free;代糖|Sugar Substitute;天然甜|Natural Sweet;人工甜|Artificial Sweet;香精|Flavor;色素|Colorant;防腐剂|Preservative;添加剂|Additive;无公害水果|Pollution-free Fruit;富硒|Selenium-rich;富锌|Zinc-rich;高维C|High Vitamin C;高花青素|Anthocyanin;类黄酮|Flavonoid;番茄红素|Lycopene;胡萝卜素|Carotene;叶酸|Folate;钾元素|Potassium;镁元素|Magnesium;铁元素|Iron;钙元素|Calcium;锌元素|Zinc;硒元素|Selenium;膳食纤维高|High Fiber;GI值|GI Value;升糖指数|Glycemic Index;饱腹感|Satiety;低热量水果|Low-cal Fruit;减脂水果|Fat-loss Fruit;增肌水果|Muscle Fruit;月子餐|Postpartum;宝宝辅食|Baby Food;病后调理|Recovery;术后饮食|Post-op Diet;糖尿病适用|Diabetic OK;孕妇适宜|Pregnancy OK;儿童适宜|Kids OK;老年适宜|Elderly OK;上班族|Office Worker;学生党|Students;健身党|Gym Goers;减肥党|Dieters;宝妈|Mom;白领|White Collar;老年人|Seniors;运动员|Athletes;素食者|Vegans;低碳水|Low Carb;生酮|Keto;轻断食|Fasting;代餐|Meal Replacement;果昔|Smoothie;冰沙|Slush;奶昔|Shake;果茶|Fruit Tea;果酒酿|Fruit Brew;果冻|Jelly;果糕|Fruit Cake;果丹皮|Fruit Leather;果干片|Dried Slice;冻干|Freeze-dried;烘干|Dehydrated;蜜饯|Candied;糖渍|Sugar-soaked;盐渍|Salted;醋泡|Vinegar-soaked;酒泡|Alcohol-soaked;罐装|Canned;瓶装|Bottled;袋装|Bagged;盒装|Boxed;杯装|Cupped;散装|Bulk Pack;真空|Vacuum;充氮|Nitrogen-flushed;气调|Modified Atmosphere;冷藏|Refrigerated;冷冻|Frozen;常温|Ambient;阴凉|Cool Place;干燥|Dry;通风|Ventilated;避光|Light-proof;防潮|Moisture-proof";
+const FISH_SRC=
+"草鱼|Grass Carp;金枪鱼|Tuna;三文鱼|Salmon;小丑鱼|Clownfish;鲤鱼|Carp;鲫鱼|Crucian Carp;鲈鱼|Sea Bass;鳕鱼|Cod;带鱼|Hairtail;黄花鱼|Yellow Croaker;沙丁鱼|Sardine;鳗鱼|Eel;鲶鱼|Catfish;黑鱼|Snakehead;鳙鱼|Bighead Carp;鲢鱼|Silver Carp;武昌鱼|Wuchang Fish;鲳鱼|Pomfret;黄鳝|Swamp Eel;泥鳅|Loach;罗非鱼|Tilapia;石斑鱼|Grouper;比目鱼|Flatfish;多宝鱼|Turbot;秋刀鱼|Pacific Saury;青花鱼|Mackerel;虹鳟|Rainbow Trout;银鱼|Silverfish;海鲈|European Bass;马鲛鱼|Spanish Mackerel;旗鱼|Sailfish;剑鱼|Swordfish;鲟鱼|Sturgeon;狗鱼|Pike;鳜鱼|Mandarin Fish;黄颡鱼|Yellow Catfish;麦穗鱼|Stone Moroko;鳑鲏|Bitterling;攀鲈|Climbing Perch;斗鱼|Betta;孔雀鱼|Guppy;锦鲤|Koi;金鱼|Goldfish;地图鱼|Oscar;食人鱼|Piranha;电鳗|Electric Eel;翻车鱼|Sunfish;河豚|Pufferfish;海马|Seahorse;龙虾|Lobster;对虾|Kuruma Prawn;基围虾|White Shrimp;梭子蟹|Swimming Crab;大闸蟹|Hairy Crab;生蚝|Oyster;扇贝|Scallop;蛤蜊|Clam;鱿鱼|Squid;章鱼|Octopus;墨鱼|Cuttlefish;海参|Sea Cucumber;海胆|Sea Urchin;青虾|Freshwater Shrimp;花蟹|Blue Crab;银鲳|Silver Pomfret;秋鲑|Autumn Salmon;罗汉鱼|Flowerhorn;蓝鳍金枪鱼|Bluefin Tuna;黄鳍金枪鱼|Yellowfin Tuna;大目金枪鱼|Bigeye Tuna;鲣鱼|Skipjack Tuna;长鳍金枪鱼|Albacore;马苏金枪鱼|Southern Bluefin;帝王鲑|King Salmon;银鲑|Coho Salmon;大鳞鲑|Chum Salmon;粉红鲑|Pink Salmon;驼背大马哈|Humpback Salmon;太平洋鲑|Pacific Salmon;北极红点鲑|Arctic Char;褐鳟|Brown Trout;河鳟|Brown Trout;金鳟|Golden Trout;湖鳟|Lake Trout;虹鳟王|Rainbow King;北极鳕|Arctic Cod;银鳕|Sablefish;黑线鳕|Haddock;无须鳕|Hake;青鳕|Pollack;狭鳕|Alaska Pollock;蓝鳕|Blue Cod;尖吻鲈|Barramundi;花鲈|Japanese Sea Bass;七星鲈|Barred Sea Bass;红鲈|Red Snapper;美国红鱼|Red Drum;真鲷|Red Sea Bream;黑鲷|Black Sea Bream;黄鳍鲷|Yellowfin Bream;平鲷|Snapper Bream;加吉鱼|Porgy;黑头鱼|Sablefish;黄姑鱼|Yellow Drum;白姑鱼|White Drum;梅童鱼|Little Croaker;小黄鱼|Small Yellow Croaker;大黄鱼|Large Yellow Croaker;鳓鱼|Ilish;鲚鱼|Anchovy;凤尾鱼|Anchovy;鯔鱼|Mullet;乌鱼|Grey Mullet;梭鱼|Barracuda;海鳗|Conger Eel;星鳗|Star Eel;海鳝|Sea Snake;七鳃鳗|Lamprey;盲鳗|Hagfish;肺鱼|Lungfish;雀鳝|Gar;弓鳍鱼|Bowfin;鲟鳇|Beluga Sturgeon;中华鲟|Chinese Sturgeon;白鲟|Chinese Paddlefish;鳇鱼|Kaluga;达氏鳇|Kaluga Sturgeon;西伯利亚鲟|Siberian Sturgeon;欧洲鳇|Beluga;小体鲟|Sterlet;匙吻鲟|Paddlefish;银鱼王|Silverfish King;大银鱼|Large Icefish;太湖银鱼|Taihu Icefish;公鱼|Icefish;香鱼|Sweetfish;马面鱼|Filefish;剥皮鱼|Filefish;绿鳍马面|Greenfin Filefish;黄鲂|Yellow Monkfish;鮟鱇|Anglerfish;琵琶鱼|Goosefish;蝠鲼|Manta Ray;电鳐|Electric Ray;鲨鱼|Shark;鲸鲨|Whale Shark;大白鲨|Great White Shark;虎鲸|Orca;海豚|Dolphin;白鲸|Beluga Whale;海豹|Seal;海狮|Sea Lion;海牛|Manatee;海龟|Sea Turtle;玳瑁|Hawksbill Turtle;棱皮龟|Leatherback;绿海龟|Green Turtle;珊瑚|Coral;海星|Starfish;海葵|Sea Anemone;水母|Jellyfish;海蜇|Jellyfish Food;海鞘|Sea Squirt;藤壶|Barnacle;牡蛎|Oyster;青口|Mussel;贻贝|Mussel;江珧|Pen Shell;香螺|Conch;响螺|Spike Top;田螺|River Snail;福寿螺|Apple Snail;钉螺|Oncomelania;蜗牛|Snail;鲍鱼|Abalone;鲍鱼苗|Abalone Seed;干鲍|Dried Abalone;鲜鲍|Fresh Abalone;北极贝|Arctic Surf Clam;象拔蚌|Geoduck;文蛤|Meretrix;花蛤|Ruditapes;蛏子|Razor Clam;蛤仔|Venerupis;西施舌|Tongue Shell;海瓜子|Baby Clam;海虹|Mussel;扇贝王|Scallop King;带子|Sword Scallop;珍珠贝|Pearl Oyster;珍珠|Pearl;牡蛎苗|Oyster Seed;生蚝王|Oyster King;大连生蚝|Dalian Oyster;乳山蚝|Rushan Oyster;阳澄湖蟹|Yangcheng Crab;洪泽湖蟹|Hongze Crab;三门青蟹|Sanmen Mud Crab;锯缘青蟹|Serrated Mud Crab;远海梭籽蟹|Oceanic Crab;梭子蟹王|Swimming King;面包蟹|Edible Crab;帝王蟹|King Crab;雪蟹|Snow Crab;珍宝蟹|Dungeness Crab;石蟹|Stone Crab;招潮蟹|Fiddler Crab;寄居蟹|Hermit Crab;蝉蟹|Sand Crab;小龍虾|Crayfish;克氏螯虾|Crayfish;喇蛄|Crayfish;对虾王|Prawn King;中国对虾|Chinese Shrimp;日本对虾|Kuruma;南美白对虾|Whiteleg Shrimp;罗氏沼虾|Giant River Prawn;淡水虾|Freshwater Shrimp;基围虾王|White Shrimp King;樱花虾|Sakura Shrimp;北极虾|Arctic Shrimp;甜虾|Sweet Shrimp;牡丹虾|Botan Shrimp;鳌虾|Crayfish;磷虾|Krill;虾仁|Shrimp Meat;虾米|Dried Shrimp;虾皮|Shrimp Shell;虾线|Shrimp Vein;虾头|Shrimp Head;虾尾|Shrimp Tail;龙虾王|Lobster King;波士顿龙虾|Boston Lobster;澳洲龙虾|Australian Lobster;锦绣龙虾|Painted Lobster;青龙虾|Blue Lobster;小龙虾尾|Crayfish Tail;皮皮虾|Mantis Shrimp;虾蛄|Mantis Shrimp;濑尿虾|Mantis Shrimp;海螳螂|Sea Mantis;琵琶虾|Slipper Lobster;蝉虾|Slipper Lobster;寄居蟹王|Hermit King;海蜈蚣|Sea Worm;沙蚕|Sandworm;蚯蚓|Earthworm;红虫|Bloodworm;水蚤|Daphnia;丰年虫|Brine Shrimp;卤虫|Brine Shrimp;藻类|Algae;海带|Kelp;紫菜|Nori;裙带菜|Wakame;石花菜|Agar Weed;海苔|Seaweed;海白菜|Sea Lettuce;浒苔|Enteromorpha;螺旋藻|Spirulina;小球藻|Chlorella;鱼子酱|Caviar;红鱼子|Red Caviar;黑鱼子|Black Caviar;三文鱼籽|Salmon Roe;飞鱼籽|Flying Fish Roe;鲱鱼籽|Herring Roe;鳕鱼籽|Cod Roe;乌鱼子|Mullet Roe;鱼翅|Shark Fin;鱼胶|Fish Maw;鱼肚|Fish Maw;鱼唇|Fish Lip;鱼骨|Fish Bone;鱼头|Fish Head;鱼尾|Fish Tail;鱼片|Fish Fillet;鱼丸|Fish Ball;鱼糕|Fish Cake;鱼饼|Fish Patty;鱼松|Fish Floss;鱼干|Dried Fish;咸鱼|Salted Fish;熏鱼|Smoked Fish;烤鱼|Grilled Fish;炸鱼|Fried Fish;生鱼片|Sashimi;刺身|Sashimi;寿司鱼|Sushi Fish;铁板烧|Teppanyaki;清蒸|Steamed;红烧|Braised;糖醋|Sweet Sour;水煮|Boiled;白灼|Blanched;椒盐|Salt Pepper;香煎|Pan-fried;煲汤|Soup;火锅|Hotpot;烧烤|BBQ;腌制|Pickled;风干|Air-dried;发酵|Fermented;冰鲜|Chilled;冷冻鱼|Frozen Fish;活鱼|Live Fish;鲜鱼|Fresh Fish;冰冻|Deep Frozen;真空鱼|Vacuum Fish;鱼塘|Fish Pond;鱼缸|Aquarium;鱼缸鱼|Tank Fish;观赏鱼|Ornamental Fish;食用鱼|Edible Fish;海水鱼|Saltwater Fish;淡水鱼|Freshwater Fish;热带鱼|Tropical Fish;冷水鱼|Coldwater Fish;温水鱼|Warmwater Fish;深海鱼|Deep-sea Fish;近海鱼|Coastal Fish;远洋鱼|Pelagic Fish;底栖鱼|Demersal Fish;中上层鱼|Pelagic;洄游鱼|Migratory Fish;定居鱼|Resident Fish;回游|Migration;产卵|Spawning;鱼苗|Fingerling;鱼种|Fish Seed;亲鱼|Broodstock;成鱼|Adult Fish;幼鱼|Juvenile;仔鱼|Larva;鱼卵|Fish Egg;受精卵|Fertilized Egg;孵化|Hatch;育苗|Nursery;养殖|Aquaculture;捕捞|Fishing;垂钓|Angling;海钓|Sea Fishing;淡水钓|Freshwater Fishing;路亚|Lure Fishing;台钓|Tai Fishing;矶钓|Rock Fishing;拖网|Trawl;围网|Purse Seine;刺网|Gillnet;钓具|Fishing Gear;鱼竿|Fishing Rod;鱼线|Fishing Line;鱼钩|Fish Hook;鱼饵|Bait;诱饵|Lure;浮漂|Float;抄网|Landing Net;鱼护|Keepnet;鱼篓|Fish Basket;鱼桶|Fish Bucket;鱼箱|Fish Box;打氧机|Oxygen Pump;水质|Water Quality;溶氧|Dissolved Oxygen;水温|Water Temp;盐度|Salinity;pH值|PH Value;氨氮|Ammonia;亚硝酸|Nitrite;硝酸盐|Nitrate;过滤|Filtration;循环水|Recirculating Water;生态养殖|Eco Aquaculture;网箱|Cage;稻渔|Rice-fish;鱼菜共生|Aquaponics;循环水养殖|RAS;工厂化|Industrial;集约化|Intensive;粗放|Extensive;混养|Polyculture;单养|Monoculture;轮作|Rotation;增氧|Aeration;投喂|Feeding;饲料|Feed;配合饲料|Compound Feed;天然饵料|Natural Feed;冰鲜饵|Fresh Bait;病害防治|Disease Control;疫苗|Vaccine;用药|Medication;中草药|Herbal;益生菌|Probiotics;免疫增强|Immune Boost;生长激素|Growth Hormone;促生长|Growth Promote;抗生素|Antibiotic;禁用|Banned;药残|Drug Residue;重金属|Heavy Metal;汞含量|Mercury;镉|Cadmium;铅|Lead;砷|Arsenic;多氯联苯|PCBs;微塑料|Microplastic;检测报告|Test Report;检疫|Quarantine;产地证|Origin Cert;质量认证|Quality Cert;绿色认证|Green Cert;有机认证|Organic Cert;无公害认证|Pollution-free Cert;地标产品|Geo-product;地理标志|Geo-indication;地理标志保护|GI Protection;特产|Specialty;名优|Famous;优质|Premium;特级|Extra Grade;一级|First Grade;二级|Second Grade;统货|Bulk;精品|Boutique;礼盒|Gift Box;冰鲜礼盒|Chilled Box;冷冻礼盒|Frozen Box;海鲜大礼包|Seafood Pack;火锅套餐|Hotpot Set;烧烤套餐|BBQ Set;刺身拼盘|Sashimi Platter;鱼生|Fish Sashimi;生猛海鲜|Live Seafood;鲜活|Live Fresh;到家|Home Delivery;次日达|Next Day;顺丰|SF Express;冷链|Cold Chain;保温|Insulated;冰袋|Ice Pack;干冰|Dry Ice;真空包装|Vacuum Pack;气调包装|MAP;锁鲜|Lock Fresh;原产地|Origin;直供|Direct Supply;产地直发|Origin Direct;进口|Imported;国产|Domestic;野生|Wild;养殖鱼|Farmed Fish;海捕|Wild Caught;塘养|Pond Raised;网箱养|Cage Raised;稻田养|Rice-field Raised;生态|Eco;有机|Organic;天然|Natural;无添加|No Additive;低脂鱼|Low-fat Fish;高蛋白|High Protein;富含Omega-3|Omega-3 Rich;DHA|DHA;EPA|EPA;不饱和脂肪酸|Unsaturated Fat;胶原蛋白|Collagen;钙质|Calcium;铁质|Iron;锌|Zinc;硒|Selenium;维生素A|Vitamin A;维生素D|Vitamin D;维生素B12|Vitamin B12;烟酸|Niacin;核黄素|Riboflavin;蛋白质|Protein;脂肪|Fat;胆固醇含量|Cholesterol;嘌呤|Purine;尿酸|Uric Acid;痛风|Gout;三高人群|Three-high;心血管|Cardio;健脑|Brain Health;明目|Eye Care;美容|Beauty;减肥|Diet;增肌|Muscle;孕妇适宜|Pregnancy OK;儿童适宜|Kids OK;老人适宜|Elderly OK;术后|Post-op;病后|Recovery;月子餐|Postpartum;健身餐|Fitness Meal;减脂餐|Diet Meal;轻食|Light Meal;代餐|Meal Replace;生食|Raw;熟食|Cooked;半成品|Semi-finished;预制菜|Pre-made;方便菜|Convenient;速食|Instant;即食|Ready-to-eat;加热即食|Heat and Eat;微波|Microwave;蒸煮|Steam Boil;油炸|Deep-fry;煎炒|Stir-fry;烤制|Roast;炖煮|Stew;卤制|Braise;酱制|Sauce;糖醋鱼|Sweet Sour Fish;酸菜鱼|Pickled Fish;水煮鱼|Boiled Fish;红烧鱼|Braised Fish;清蒸鱼|Steamed Fish;烤鱼王|Grilled King;松鼠桂鱼|Squirrel Mandarin;糖醋鲤鱼|Sweet Sour Carp;黄河鲤|Yellow River Carp;武昌鱼王|Wuchang King;清蒸鲈鱼|Steamed Bass;剁椒鱼头|Chopped Pepper Head;鱼头泡饼|Fish Head Bread;烤鳗|Grilled Eel;蒲烧鳗|Kabayaki Eel;鳗鱼饭|Eel Rice;三文鱼饭|Salmon Bowl;金枪鱼饭|Tuna Bowl;海鲜饭|Seafood Rice;鱼生饭|Fish Bowl;刺身拼|Sashimi Set;寿司拼|Sushi Set;海鲜粥|Seafood Porridge;鱼片粥|Fish Porridge;鱼丸汤|Fish Ball Soup;鱼头汤|Fish Head Soup;鱼汤|Fish Soup;鱼羹|Fish Thick Soup;鱼粥|Fish Porridge;虾仁炒蛋|Shrimp Scramble;虾饺|Shrimp Dumpling;虾仁|Shrimp Meat;虾滑|Shrimp Paste;虾仁球|Shrimp Ball;蟹黄|Crab Roe;蟹肉|Crab Meat;蟹膏|Crab Butter;蟹钳|Crab Claw;蟹腿|Crab Leg;龙虾尾|Lobster Tail;龙虾钳|Lobster Claw;生蚝杯|Oyster Cup;扇贝粉丝|Scallop Glass Noodle;蒜蓉扇贝|Garlic Scallop;蛤蜊汤|Clam Soup;花蛤炒|Stir-fry Clam;蛏子汤|Razor Soup;田螺炒|Stir-fry Snail;螺蛳粉|Luosifen;生蚝煎|Oyster Omelette;蚵仔煎|Oyster Omelette;墨鱼仔|Baby Squid;鱿鱼圈|Squid Ring;章鱼小丸子|Takoyaki;海参粥|Sea Cucumber Porridge;海参汤|Cucumber Soup;海胆酱|Urchin Paste;海胆饭|Urchin Bowl;鱼子酱饭|Caviar Bowl;海鲜酱|Seafood Sauce;鱼露|Fish Sauce;虾酱|Shrimp Paste;蚝油|Oyster Sauce;蟹酱|Crab Sauce;鱼丸汤面|Fish Ball Noodle;海鲜面|Seafood Noodle;鱼面|Fish Noodle;虾面|Shrimp Noodle;海鲜炒饭|Seafood Fried Rice;鱼香肉丝|Fish-fragrant Pork;鱼香茄子|Fish-fragrant Eggplant;酸菜|Pickled Veg;泡椒|Pickled Pepper;剁椒|Chopped Pepper;豆豉|Fermented Bean;豆瓣酱|Doubanjiang;香菜|Cilantro;葱花|Scallion;姜丝|Ginger;蒜末|Garlic;料酒|Cooking Wine;生抽|Light Soy;老抽|Dark Soy;蚝油汁|Oyster Juice;淀粉|Starch;蛋清|Egg White;胡椒粉|Pepper Powder;花椒|Sichuan Pepper;八角|Star Anise;桂皮|Cinnamon;香叶|Bay Leaf;干辣椒|Dried Chili;白胡椒|White Pepper;黑胡椒|Black Pepper;孜然|Cumin;咖喱|Curry;番茄酱|Ketchup;沙拉酱|Salad Dressing;芥末|Mustard;柠檬汁|Lemon Juice;橄榄油|Olive Oil;花生油|Peanut Oil;菜籽油|Rapeseed Oil;芝麻油|Sesame Oil;黄油|Butter;奶酪|Cheese;牛奶|Milk;酸奶|Yogurt;面包|Bread;米饭|Rice;面条|Noodle;饺子|Dumpling;馒头|Steamed Bun;包子|Bun;烧麦|Shaomai;馄饨|Wonton;粉丝|Vermicelli;米粉|Rice Noodle;年糕|Rice Cake;粽子|Zongzi;月饼|Moon Cake;汤圆|Tangyuan;豆腐|Tofu;豆干|Dried Tofu;腐竹|Yuba;豆皮|Tofu Skin;素鸡|Vegetarian Chicken;火腿|Ham;培根|Bacon;香肠|Sausage;牛肉|Beef;羊肉|Mutton;猪肉|Pork;鸡肉|Chicken;鸭肉|Duck;鹅肉|Goose;兔肉|Rabbit;狗肉|Dog Meat;驴肉|Donkey;马肉|Horse;鹿肉|Venison;鸽肉|Pigeon;鹌鹑|Quail;鸡蛋|Egg;鸭蛋|Duck Egg;鹅蛋|Goose Egg;皮蛋|Century Egg;咸蛋|Salted Egg;茶叶蛋|Tea Egg;卤蛋|Braised Egg;蒸蛋|Steamed Egg;炒蛋|Scrambled Egg;煎蛋|Fried Egg;水煮蛋|Boiled Egg;溏心蛋|Soft-boiled;温泉蛋|Onsen Egg;蛋羹|Egg Custard;蛋花汤|Egg Drop Soup;蛋饼|Egg Pancake;蛋炒饭|Fried Rice;蛋挞|Egg Tart;蛋糕|Cake;面包片|Bread Slice;吐司|Toast;三明治|Sandwich;汉堡|Burger;披萨|Pizza;意面|Pasta;牛排|Steak;羊排|Lamb Chop;鸡排|Chicken Cutlet;猪排|Pork Cutlet;鱼排|Fish Cutlet;虾排|Shrimp Cutlet;鸡腿|Chicken Leg;鸡翅|Chicken Wing;鸡胸|Chicken Breast;鸡胗|Gizzard;鸡心|Heart;鸡肝|Liver;鸡爪|Chicken Feet;鸭脖|Duck Neck;鸭锁骨|Duck Collar;鸭翅|Duck Wing;鸭胗|Duck Gizzard;鹅肝|Foie Gras;牛排馆|Steakhouse;西餐|Western Food;中餐|Chinese Food;日料|Japanese;韩餐|Korean;东南亚|SE Asian;法餐|French;意餐|Italian;美式|American;快餐|Fast Food;外卖|Takeout;堂食|Dine-in;自助|Buffet;简餐|Light Meal;正餐|Main Meal;早餐|Breakfast;午餐|Lunch;晚餐|Dinner;夜宵|Late Night;下午茶|Afternoon Tea;茶点|Tea Snack;甜品|Dessert;小吃|Snack;零食|Junk Food;糖果|Candy;巧克力|Chocolate;冰淇淋|Ice Cream;雪糕|Popsicle;布丁|Pudding;果冻|Jelly;饼干|Biscuit;薯片|Chips;坚果|Nut;瓜子|Sunflower Seed;花生|Peanut;腰果|Cashew;杏仁|Almond;核桃|Walnut;榛子|Hazelnut;松子|Pine Nut;开心果|Pistachio;夏威夷果|Macadamia;巴旦木|Badam;碧根果|Pecan;夏果|Summer Nut;水果|Fruit;蔬菜|Vegetable;肉类|Meat;主食|Staple;汤品|Soup;凉菜|Cold Dish;热菜|Hot Dish;卤味|Braised Dish;烧烤|BBQ;火锅|Hotpot;串串|Skewer;麻辣烫|Malatang;冒菜|Maocai;关东煮|Oden;饺子馆|Dumpling House;面馆|Noodle House;粥铺|Porridge Shop;快餐店|Fast Food Shop;餐厅|Restaurant;饭店|Hotel Restaurant;酒楼|Restaurant Hall;大排档|Street Stall;小吃街|Snack Street;夜市|Night Market;菜市场|Wet Market;超市|Supermarket;便利店|Convenience;生鲜店|Fresh Shop;海鲜市场|Seafood Market;水产店|Aquatic Shop;渔港|Fishing Port;码头|Dock;渔船|Fishing Boat;远洋船|Ocean Vessel;冷藏船|Reefer;集装箱|Container;物流|Logistics;仓储|Warehouse;冷链仓|Cold Warehouse;分拣|Sorting;打包|Packing;贴标|Labeling;称重|Weighing;计价|Pricing;斤两|Weight;论斤|By Catty;论只|By Piece;论盒|By Box;论盘|By Plate;套餐|Set Meal;拼盘|Platter;大份|Large;中份|Medium;小份|Small;加量|Extra;少冰|Less Ice;去冰|No Ice;多辣|Extra Spicy;微辣|Light Spicy;中辣|Medium Spicy;特辣|Extra Spicy;不辣|No Spicy;忌口|Dietary Taboo;过敏|Allergy;海鲜过敏|Seafood Allergy;花生过敏|Peanut Allergy;乳糖不耐|Lactose;素食|Vegetarian;纯素|Vegan;蛋奶素|Lacto-ovo;清真|Halal;犹太|Kosher;无麸质|Gluten-free;低盐|Low Salt;低糖|Low Sugar;低脂|Low Fat;低卡|Low Cal;高蛋白|High Protein;高纤维|High Fiber;增肌|Muscle Gain;减脂|Fat Loss;塑形|Shaping;生酮|Keto;低碳|Low Carb;轻断食|Fasting;辟谷|Fast;代餐|Replacement;营养|Nutrition;卡路里|Calorie;千卡|Kcal;热量|Heat;能量|Energy;饱腹|Satiety;饥饿|Hunger;食欲|Appetite;美味|Delicious;可口|Tasty;好吃|Yummy;难吃|Bad Taste;新鲜度|Freshness;口感|Texture;味道|Taste;香味|Aroma;腥味|Fishy;鲜味|Umami;甜味|Sweetness;酸味|Sourness;苦味|Bitterness;辣味|Spiciness;咸味|Saltiness;鲜甜|Sweet Fresh;爽滑|Silky;弹牙|Bouncy;细嫩|Tender;老韧|Tough;柴|Dry;多汁|Juicy;入味|Flavorful;清淡|Mild;浓郁|Rich;厚重|Heavy;轻盈|Light;回味|Aftertaste;回甘|Sweet After;余味|Lingering;层次|Layer;丰富|Complex;单调|Flat;平衡|Balanced;和谐|Harmonious;冲突|Conflict;突兀|Obtrusive;温柔|Gentle;强烈|Strong;刺激|Stimulating;温和|Mild;尖锐|Sharp;圆润|Round;细腻|Delicate;粗糙|Coarse;顺滑|Smooth;颗粒|Grainy;绵密|Dense;蓬松|Fluffy;紧实|Firm;松散|Loose;粘稠|Sticky;流动|Flowing;凝固|Set;融化|Melting;冷却|Cooling;加热|Heating;常温|Ambient;滚烫|Piping;冰凉|Icy;温热|Warm;凉爽|Chilly;闷热|Stuffy;干燥|Dry;潮湿|Humid;油腻|Greasy;清爽|Refreshing;醇厚|Mellow;浓烈|Intense;淡雅|Elegant;朴实|Plain;华丽|Fancy;精致|Exquisite;粗犷|Rustic;家常|Homely;地道|Authentic;正宗|Genuine;传统|Traditional;创新|Innovative;融合|Fusion;混搭|Mix;经典|Classic;招牌|Signature;主打|Featured;推荐|Recommended;必点|Must Order;人气|Popular;爆款|Bestseller;限量|Limited;新品|New;特价|Special;优惠|Discount;满减|Rebate;买一送一|BOGO;第二份半价|Second Half;团购|Group Buy;代金券|Voucher;会员|Member;积分|Points;霸王餐|Free Meal;试吃|Tasting;免单|Free;退款|Refund;差评|Bad Review;好评|Good Review;五星|Five Star;推荐指数|Rating;环境|Ambiance;服务|Service;上菜|Serving;等位|Waitlist;排队|Queue;预约|Reservation;包间|Private Room;大堂|Hall;外卖箱|Delivery Box;骑手|Courier;配送|Delivery;准时达|On-time;超时|Overtime;保温袋|Insulated Bag;餐盒|Meal Box;餐具|Utensils;筷子|Chopsticks;勺子|Spoon;叉子|Fork;刀具|Knife;餐巾|Napkin;牙签|Toothpick;纸巾|Tissue;湿巾|Wipe;围裙|Apron;手套|Glove;口罩|Mask;头套|Hairnet;工服|Uniform;工牌|Badge;健康证|Health Cert;营业执照|License;卫生许可|Hygiene Permit;明厨亮灶|Open Kitchen;阳光厨房|Sunny Kitchen;后厨|Back Kitchen;前厅|Front Hall;收银|Cashier;点单|Ordering;加菜|Add Dish;退菜|Return;打包盒|Takeout Box;打包袋|Takeout Bag;一次性|Disposable;可降解|Degradable;环保|Eco-friendly;禁塑|Plastic Ban;少油|Less Oil;少盐|Less Salt;少糖|Less Sugar;少辣|Less Spicy;多葱|Extra Scallion;不要香菜|No Cilantro;不要葱|No Scallion;不要姜|No Ginger;不要蒜|No Garlic;过敏提示|Allergy Note;温馨提示|Warm Tip;招牌菜|Signature Dish;主厨推荐|Chef Pick;时令菜|Seasonal Dish;例汤|Daily Soup;功夫汤|Kungfu Soup;例粥|Daily Porridge;小菜|Side Dish;开胃菜|Appetizer;前菜|Starter;头盘|First Course;主菜|Main Course;副菜|Side Course;配菜|Garnish;甜点|Dessert;水果盘|Fruit Plate;果盘|Fruit Plate;餐后甜点|After Dinner;咖啡|Coffee;茶|Tea;果汁|Juice;汽水|Soda;矿泉水|Mineral Water;可乐|Cola;雪碧|Sprite;奶茶|Milk Tea;珍珠奶茶|Bubble Tea;酸奶饮品|Yogurt Drink;豆浆|Soy Milk;米汤|Rice Soup;绿豆汤|Mung Soup;银耳汤|Fungus Soup;红豆汤|Red Bean Soup;酸梅汤|Plum Drink;凉茶|Herbal Tea;柠檬水|Lemon Water;蜂蜜水|Honey Water;姜茶|Ginger Tea;菊花茶|Chrysanthemum;枸杞茶|Goji Tea;红茶|Black Tea;绿茶|Green Tea;白茶|White Tea;乌龙|Oolong;普洱|Pu'er;龙井|Longjing;碧螺春|Biluochun;毛尖|Maojian;铁观音|Tieguanyin;大红袍|Da Hong Pao;正山小种|Lapsang;金骏眉|Junmei;茉莉花茶|Jasmine;普洱熟茶|Ripe Pu'er;普洱生茶|Raw Pu'er;六安茶|Lu'an Tea;君山银针|Junshan;黄山毛峰|Maofeng;祁门红茶|Keemun;滇红|Dianhong;英红|Yinghong;白毫银针|Silver Needle;白牡丹|White Peony;寿眉|Shoumei;贡眉|Gongmei;新白茶|New White;老白茶|Aged White;老岩茶|Aged Rock;陈年普洱|Aged Pu'er;十年陈|Ten-year;二十年陈|Twenty-year;古树茶|Ancient Tree;大树茶|Big Tree;台地茶|Terrace Tea;生态茶|Eco Tea;有机茶|Organic Tea;高山茶|High Mountain;云雾茶|Cloud Tea;明前茶|Pre-Qingming;雨前茶|Pre-Guyu;春茶|Spring Tea;夏茶|Summer Tea;秋茶|Autumn Tea;冬茶|Winter Tea;头采|First Pick;二采|Second Pick;明前龙井|Pre-Qingming Longjing;狮峰龙井|Shifeng Longjing;西湖龙井|West Lake Longjing;洞庭碧螺春|Dongting Biluochun;安溪铁观音|Anxi Tieguanyin;武夷大红袍|Wuyi Da Hong Pao;凤凰单丛|Phoenix Dancong;冻顶乌龙|Dong Ding;阿里山乌龙|Alishan Oolong;梨山乌义|Lishan Oolong;东方美人|Oriental Beauty;金萱|Jinxuan;四季春|Sijichun;包种|Baozhong;高山茶王|Mountain King;岩茶|Rock Tea;水仙|Narcissus;肉桂|Cinnamon;名丛|Famous Bush;拼配|Blend;纯料|Pure;单一园|Single Garden;山头茶|Mountain Tea;村寨茶|Village Tea;古六大茶山|Six Ancient Mountains;新六大茶山|Six New Mountains;勐海|Menghai;勐腊|Mengla;景迈|Jingmai;布朗|Bulang;易武|Yiwu;班章|Banzhang;冰岛|Bingdao;昔归|Xigui;老班章|Old Banzhang;曼松|Mansong;困鹿山|Kunlu;攸乐|Youle;革登|Gedeng;莽枝|Mangzhi;倚邦|Yibang;蛮砖|Manzhuan;江城|Jiangcheng;铜箐河|Tongqinghe;百花潭|Baihuatan;薄荷糖|Bohetang;猫耳朵|Catear;大雪山|Daxueshan;永德|Yongde;镇沅|Zhenyuan;景谷|Jinggu;临沧|Lincang;普洱市|Pu'er City;西双版纳|Xishuangbanna;大理|Dali;丽江|Lijiang;香格里拉|Shangri-la;昆明|Kunming;大理古城|Dali Old Town;洱海|Erhai;苍山|Cangshan;玉龙雪山|Yulong Snow;虎跳峡|Tiger Leaping;泸沽湖|Lugu Lake;束河古镇|Shuhe;白沙古镇|Baisha;喜洲|Xizhou;双廊|Shuanglang;挖色|Waseu;小普陀|Little Putuo;才村|Caicun;龙龛|Longkan;下关|Xiaguan;上关|Shangguan;南诏|Nanzhao;大理国|Dali Kingdom;白族|Bai;彝族|Yi;纳西族|Naxi;藏族|Tibetan;傈僳族|Lisu;苗族|Miao;侗族|Dong;壮族|Zhuang;回族|Hui;傣族|Dai;哈尼族|Hani;佤族|Va;拉祜族|Lahu;布朗族|Bulang;基诺族|Jino;景颇族|Jingpo;阿昌族|Achang;普米族|Pumi;怒族|Nu;独龙族|Derung;水族|Shui;布依族|Buyei;仡佬族|Gelao;毛南族|Maonan;仫佬族|Mulao;土家族|Tujia;瑶族|Yao;畲族|She;高山族|Gaoshan;锡伯族|Xibe;柯尔克孜|Kyrgyz;塔吉克|Tajik;乌兹别克|Uzbek;俄罗斯族|Russian;朝鲜族|Korean;蒙古族|Mongol;维吾尔|Uyghur;哈萨克|Kazakh;裕固族|Yugur;保安族|Bonan;东乡族|Dongxiang;撒拉族|Salar;土族|Tu;达斡尔|Daur;鄂温克|Evenki;鄂伦春|Oroqen;赫哲族|Hezhen;门巴族|Monba;珞巴族|Lhoba;基诺|Jino";
+const FRUITS=[], FISHES=[];
+function parseKB(src, cat){
+  const out=[];
+  const parts=src.split(';');
+  for(let i=0;i<parts.length;i++){
+    const p=parts[i];
+    const bar=p.indexOf('|');
+    if(bar<1)continue;
+    const c=p.slice(0,bar).trim();
+    const e=p.slice(bar+1).trim();
+    if(c&&e)out.push({c:c,e:e,cat:cat});
+  }
+  return out;
+}
+try{
+  FRUITS.push(...parseKB(FRUIT_SRC,'f'));
+  FISHES.push(...parseKB(FISH_SRC,'s'));
+}catch(e){console.warn('KB parse',e)}
+/* O(1) 索引：中文 Map、英文 Map、已用 Set */
+const CN2ITEM=new Map(), EN2ITEM=new Map(), ALL_ITEMS=new Set();
+function normCn(s){return String(s||'').trim().replace(/\s+/g,'').toLowerCase()}
+function normEn(s){return String(s||'').trim().replace(/\s+/g,' ').toLowerCase()}
+FRUITS.concat(FISHES).forEach(x=>{
+  if(!CN2ITEM.has(normCn(x.c)))CN2ITEM.set(normCn(x.c),x);
+  const ek=normEn(x.e);
+  if(!EN2ITEM.has(ek))EN2ITEM.set(ek,x);
+  ALL_ITEMS.add(x);
+});
+const KB_TOTAL=FRUITS.length+FISHES.length;
+
+/* ======== 🗣️ 英语对话情景库 ======== */
+const SCENARIOS=[
+ {tag:"在餐厅点餐",line:"Good evening. Do you have a table for two?",kw:["yes","table","menu","please","order","would like","two","for two","sit"],ans:"Yes, right this way. Here is the menu. What would you like to order?"},
+ {tag:"在机场办理登机",line:"May I see your passport and ticket, please?",kw:["here","passport","ticket","yes","sure","certainly","boarding"],ans:"Sure, here you are. Here are my passport and ticket."},
+ {tag:"在超市买水果",line:"Hi, how much are the apples today?",kw:["they are","per kilo","pound","each","two dollars","expensive","fresh","cheap","cost","kg"],ans:"They are two dollars a kilo. They are very fresh today."},
+ {tag:"问路（最近的车站）",line:"Excuse me, where is the nearest station?",kw:["go straight","turn left","turn right","walk","block","street","straight","ahead","down","it is"],ans:"Go straight and turn left at the second street. It is about five minutes away."},
+ {tag:"在酒店办理入住",line:"Welcome to Sunshine Hotel. Do you have a reservation?",kw:["yes","reservation","book","name","checking in","room","mr","mrs"],ans:"Yes, I have a reservation under the name Smith."},
+ {tag:"在咖啡店点咖啡",line:"What can I get for you today?",kw:["coffee","latte","cappuccino","tea","please","would","cup","iced","have","black"],ans:"Could I have a large latte, please?"},
+ {tag:"看病（看医生）",line:"What seems to be the problem today?",kw:["i have","headache","fever","pain","hurt","sick","cough","feel","stomach","throat"],ans:"I have had a headache and a fever since yesterday."},
+ {tag:"购物（买衣服）",line:"Can I help you find something?",kw:["yes","looking","size","shirt","dress","try","wear","blue","coat","medium"],ans:"Yes, I am looking for a medium shirt. Where is the fitting room?"},
+ {tag:"在火车站买票",line:"Where would you like to go?",kw:["ticket","to","please","one","return","departure","leaving","train","going","want"],ans:"I would like one ticket to New York, please."},
+ {tag:"自我介绍（新同事）",line:"Hi, I am Tom. I just joined the team.",kw:["hi","nice","meet","i am","name","welcome","pleasure","glad","you","same"],ans:"Hi Tom, nice to meet you. I am Lily. Welcome to the team."},
+ {tag:"打电话预约",line:"Hello, this is Dr. Lee's office. How can I help you?",kw:["appointment","book","schedule","friday","monday","time","see","doctor","week","morning"],ans:"I would like to make an appointment with the doctor this week, please."},
+ {tag:"抱怨酒店房间",line:"Sorry, is there a problem with your room?",kw:["air","conditioning","wifi","towel","noisy","broken","fix","cold","hot","please"],ans:"Yes, the air conditioning does not work. Could you fix it, please?"},
+ {tag:"机场安检",line:"Please put your laptop and liquids in the tray.",kw:["okay","sure","here","done","now","any","need","remove","bag","take"],ans:"Okay, here you are. Do I need to take off my belt too?"},
+ {tag:"谈论天气",line:"Lovely weather today, isn't it?",kw:["yes","sunny","rain","hot","cold","beautiful","agree","looks","forecast","cloudy"],ans:"Yes, it is really sunny today. But it may rain tomorrow."},
+ {tag:"邀请朋友",line:"Are you free this Saturday evening?",kw:["yes","sure","what time","come","dinner","movie","love to","free","where","sounds"],ans:"Yes, I am free. What time should I come? I would love to have dinner."},
+ {tag:"在健身房",line:"Have you used this machine before?",kw:["no","first","time","how","show","yes","help","use","please","guide"],ans:"No, it is my first time. Could you show me how to use it?"},
+ {tag:"图书馆借书",line:"Do you have a library card?",kw:["yes","here","card","borrow","book","this one","show","new","apply","register"],ans:"Yes, here is my card. I would like to borrow this book, please."},
+ {tag:"打车去机场",line:"Where are you heading?",kw:["airport","please","flight","terminal","how long","much","fast","drop","run","going"],ans:"To the airport, please. My flight leaves in two hours."},
+ {tag:"还书道歉",line:"This book is two weeks overdue.",kw:["sorry","late","fine","pay","return","apologize","today","forgot","much","okay"],ans:"I am very sorry. I forgot. How much is the fine? I can pay today."},
+ {tag:"生日祝福",line:"Today is my birthday!",kw:["happy","birthday","congrats","wish","best","many","returns","great","celebrate","nice"],ans:"Happy birthday! I hope you have a wonderful day!"}
+];
+
+/* ============================================================
+   ⚠️ 纯前端原生语法诊断引擎（正则 + 规则集，O(句长)）
+   ============================================================ */
+const SUBJ_ANY3=new Set(['he','she','it']);
+const BARE_VERBS=new Set(['go','come','do','have','eat','drink','take','make','see','want','need','like','love','help','give','get','say','tell','play','work','live','stay','look','call','meet','buy','sell','pay','try','start','open','close','put','feel','know','think','speak','write','read','run','walk','wait','order','fly','land','board','check','sit','stand','watch','clean','fix','show','borrow','return','join','finish','study','teach','learn','drive','swim','sing','dance','draw','tell','buy','bring','catch','choose','lose','win','begin','write','ride','swim','drink']);
+const IRREG_PAST={'went':'go','came':'come','did':'do','had':'have','ate':'eat','drank':'drink','took':'take','made':'make','saw':'see','got':'get','said':'say','told':'tell','bought':'buy','sold':'sell','paid':'pay','felt':'feel','knew':'know','thought':'think','spoke':'speak','wrote':'write','ran':'run','swam':'swim','sang':'sing','gave':'give','left':'leave','met':'meet','lost':'lose','won':'win','began':'begin','chose':'choose','flew':'fly','drove':'drive','brought':'bring','caught':'catch','taught':'teach','read':'read'};
+const ADJ_ANT={'happy':'unhappy','tall':'short','short':'tall','hot':'cold','cold':'hot','big':'small','small':'big','good':'bad','bad':'good','beautiful':'ugly','expensive':'cheap','cheap':'expensive','easy':'difficult','difficult':'easy','young':'old','old':'young','clean':'dirty','dirty':'clean','full':'empty','empty':'full','rich':'poor','poor':'rich','right':'wrong','wrong':'right','fast':'slow','slow':'fast','heavy':'light','light':'heavy','strong':'weak','weak':'strong','early':'late','late':'early'};
+const BE_ADJ=new Set(['happy','sad','angry','tired','hungry','thirsty','busy','ready','sorry','free','cool','hot','cold','warm','late','early','young','old','rich','poor','right','wrong','sure','glad','pleased','afraid','sick','fine','great','nice','beautiful','ugly','tall','short','big','small','important','easy','difficult','comfortable','excited','nervous','proud','shy','kind','careful','serious','calm','safe','popular','famous','expensive','cheap','delicious','fresh','friendly','honest','smart','strong','weak','heavy','light','fast','slow','clean','dirty','full','open','broken','quiet','bright','dark','sweet','soft','hard','dry','wet']);
+/* 冠词规则：元音音素开头用 an（含 hour/echo/honest 等 h 不发音、及 honest/honor 类） */
+const AN_RE=/\ba\s+((?:[aeiou]|hour|honest|honor|honour|heir|heirloom)\w*)/gi;
+const A_FIX_RE=/\ban\s+((?:[bcdfgjklmnpqrstvwxyz]\w*))/gi;
+function vowelSound(word){
+  const w=word.toLowerCase();
+  if(/^(hour|honest|honor|honour|heir|honou?r)/.test(w))return true; // h 不发音
+  return /^[aeiou]/.test(w);
+}
+function checkGrammar(text){
+  const issues=[];
+  const orig=text.trim();
+  if(!orig)return issues;
+  const plain=orig.replace(/[!?.,;:'"()]/g,' ').replace(/\s+/g,' ').trim();
+  const toks=plain.split(' ').filter(Boolean);
+  const low=toks.map(t=>t.toLowerCase());
+  const n=low.length;
+  if(!n)return issues;
+
+  // 规则A：遗漏 be 动词 —— 主语 + 形容词（You happy -> You are happy）
+  for(let i=0;i<n-1;i++){
+    const t=low[i], nx=low[i+1];
+    if(['i','you','we','they','he','she','it'].includes(t)&&BE_ADJ.has(nx)){
+      issues.push({type:'遗漏 Be 动词',detail:'「'+toks[i]+' '+toks[i+1]+'」缺少系动词 (is/are/am)',fix:toks[i]+(t==='i'?' am':' are')+' '+toks[i+1],tip:'主语 + 形容词需要 Be 动词连接：You happy → You are happy；They ready → They are ready'});
+      break;
+    }
+  }
+  // 规则B：主谓不一致 —— 第三人称单数缺 -s/es（He go/want/like）
+  if(n>=2&&SUBJ_ANY3.has(low[0])&&BARE_VERBS.has(low[1])){
+    const v=low[1];
+    let fix3;
+    if(v==='go')fix3='goes';
+    else if(/[^s]h$/.test(v)||/(x|z|ch|sh|ss|o)$/.test(v))fix3=v+'es';
+    else if(/[^aeiou]y$/.test(v))fix3=v.slice(0,-1)+'ies';
+    else fix3=v+'s';
+    issues.push({type:'主谓不一致：第三人称单数缺少 -s/es',detail:'「'+toks[0]+' '+toks[1]+'」he/she/it 后动词需加 -s/-es',fix:toks[0]+' '+fix3,tip:'He go → He goes；She want → She wants；It like → It likes（否定：He doesn\'t go）'});
+  }
+  // 规则C：复数主语 + 单数动词（They goes / We wants）
+  if(n>=2&&['i','you','we','they'].includes(low[0])){
+    const v=low[1];
+    let base=null;
+    if(v.endsWith('ies')&&BARE_VERBS.has(v.slice(0,-3)+'y'))base=v.slice(0,-3)+'y';
+    else if(v.endsWith('es')&&BARE_VERBS.has(v.slice(0,-2)))base=v.slice(0,-2);
+    else if(v.endsWith('s')&&v.length>2&&BARE_VERBS.has(v.slice(0,-1)))base=v.slice(0,-1);
+    if(base){
+      issues.push({type:'主谓不一致：主语非第三人称，动词不应加 -s',detail:'「'+toks[0]+' '+toks[1]+'」I/you/we/they 用动词原形',fix:toks[0]+' '+base,tip:'They goes → They go；We wants → We want'});
+    }
+  }
+  // 规则D：be + 动词原形（He is go -> He is going）
+  if(n>=3&&['is','are','am','was','were'].includes(low[1])&&BARE_VERBS.has(low[2])){
+    issues.push({type:'时态/词性错误：be 后误用动词原形',detail:'「'+toks[1]+' '+toks[2]+'」be 后应接 v-ing/过去分词/形容词',fix:toks[0]+' '+toks[1]+' '+low[2]+'ing',tip:'He is go → He is going；She is want → She is wanting'});
+  }
+  // 规则E：重复单词（I want to to go）
+  for(let i=0;i<n-1;i++){
+    if(low[i]===low[i+1]&&!['no','very','so','really'].includes(low[i])){
+      issues.push({type:'重复单词',detail:'「'+toks[i]+'」重复出现',fix:toks.filter((t,idx)=>idx!==i+1).join(' '),tip:'删除重复的单词'});
+      break;
+    }
+  }
+  // 规则F：时态混用（I am went -> I went）
+  if(n>=3&&low[0]==='i'&&['am','is','are'].includes(low[1])&&IRREG_PAST[low[2]]){
+    issues.push({type:'时态错误：过去式与 be 动词混用',detail:'「'+toks[1]+' '+toks[2]+'」be 不能接过去式',fix:'I '+IRREG_PAST[low[2]],tip:'I am went → I went；过去动作用一般过去时'});
+  }
+  // 规则G：冗余/反义形容词（very very good / big small）
+  for(let i=0;i<n-1;i++){
+    if(low[i]===low[i+1]&&['very','so','really'].includes(low[i])){
+      issues.push({type:'冗余重复',detail:'「'+toks[i]+' '+toks[i+1]+'」语义重复',fix:toks.filter((t,idx)=>idx!==i+1).join(' '),tip:'删除一个重复的程度副词'});
+      break;
+    }
+    const a=low[i],b=low[i+1];
+    if(ADJ_ANT[a]===b&&BE_ADJ.has(a)&&BE_ADJ.has(b)&&a!==b){
+      issues.push({type:'语义矛盾：反义形容词连用',detail:'「'+toks[i]+' '+toks[i+1]+'」是一对反义形容词',fix:toks.slice(0,i+1).join(' '),tip:'只能保留其中一个：big small → big'});
+      break;
+    }
+  }
+  // 规则H：冠词误用 —— a apple -> an apple（元音音素开头用 an）
+  {
+    let m;
+    AN_RE.lastIndex=0;
+    while((m=AN_RE.exec(orig))!==null){
+      const w=m[1];
+      if(vowelSound(w)){
+        issues.push({type:'冠词误用：元音音素开头应使用 an',detail:'「a '+w+'」应为「an '+w+'」',fix:orig.replace(new RegExp('\\ba\\s+'+w,'i'),'an '+w),tip:'a + 辅音音素；an + 元音音素：a apple → an apple；an honest man（h 不发音用 an）'});
+        break;
+      }
+    }
+    if(!issues.length||issues[0].type.indexOf('冠词')<0){
+      A_FIX_RE.lastIndex=0;
+      while((m=A_FIX_RE.exec(orig))!==null){
+        const w=m[1];
+        if(!vowelSound(w)&&!/^(u[a-z])?nivers/.test(w)){
+          issues.push({type:'冠词误用：辅音音素开头应使用 a',detail:'「an '+w+'」应为「a '+w+'」',fix:orig.replace(new RegExp('\\ban\\s+'+w,'i'),'a '+w),tip:'an hour（h 不发音）但 a university / a user（y 发 /juː/）'});
+          break;
+        }
+      }
+    }
+  }
+  // 规则I：句首未大写
+  if(/^[a-z]/.test(orig)){
+    issues.push({type:'句首未大写',detail:'英语句子首字母应大写',fix:orig.charAt(0).toUpperCase()+orig.slice(1),tip:'句首字母必须大写：he go → He go'});
+  }
+  // 规则J：缺少句末标点（. ? !）
+  if(!/[.!?]$/.test(orig)&&n>=4){
+    issues.push({type:'缺少句末标点',detail:'句子结尾缺少 . ? !',fix:orig+'.',tip:'陈述句用 . ；疑问句用 ? ；感叹句用 !'});
+  }
+  // 规则K：常见拼写（alot / im）
+  if(/\balot\b/i.test(orig)){
+    issues.push({type:'拼写错误',detail:'「alot」应写作「a lot」',fix:orig.replace(/alot/gi,'a lot'),tip:'a lot 是两个单词'});
+  }
+  if(/\bim\b/i.test(orig)){
+    issues.push({type:'拼写/缩写错误',detail:'「im」应写作「I\'m」',fix:orig.replace(/\bim\b/gi,"I'm"),tip:'I am 的缩写是 I\'m，且 I 永远大写'});
+  }
+  return issues.slice(0,3);
+}
+
+const LS_DATA='dual_arena_v3', LS_THEME='fruitfish_battle_theme_v1';
+let state={
+  started:false,gmode:'words',diff:'normal',
+  names:['玩家 A','玩家 B'],turn:0,scores:[0,0],
+  words:[[],[]],all:new Set(),scIdx:-1,usedSc:new Set(),logs:[]
+};
+let kbFilter='all';
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(LS_DATA)||'null');
+    if(d&&Array.isArray(d.words)&&d.words.length===2){
+      state.started=!!d.started;
+      state.gmode=d.gmode==='en'?'en':'words';
+      state.diff=d.diff==='hard'?'hard':'normal';
+      state.names=d.names||['玩家 A','玩家 B'];
+      state.turn=d.turn?1:0;
+      state.scores=d.scores||[0,0];
+      state.words=d.words;state.logs=d.logs||[];
+      state.all=new Set(d.all||[]);
+      state.usedSc=new Set(d.usedSc||[]);
+      state.scIdx=(typeof d.scIdx==='number')?d.scIdx:-1;
+      if(!state.all.size)state.words.forEach(w=>w.forEach(x=>state.all.add(keyOf(x))));
+    }
+  }catch(e){}
+  const th=localStorage.getItem(LS_THEME);
+  if(th==='dark')document.documentElement.classList.add('dark');
+  syncTheme();
+  document.querySelector('input[name="gmode"][value="'+state.gmode+'"]').checked=true;
+  const dv=document.querySelector('input[name="diff"][value="'+state.diff+'"]');if(dv)dv.checked=true;
+  applyModeUI();
+  document.getElementById('p1Name').value=state.names[0];
+  document.getElementById('p2Name').value=state.names[1];
+  if(state.gmode==='en'&&state.started&&state.scIdx<0)nextScenario();
+  render();
+}
+function persist(){
+  try{
+    localStorage.setItem(LS_DATA,JSON.stringify({
+      started:state.started,gmode:state.gmode,diff:state.diff,names:state.names,
+      turn:state.turn,scores:state.scores,words:state.words,
+      logs:state.logs.slice(0,60),all:[...state.all],usedSc:[...state.usedSc],scIdx:state.scIdx
+    }));
+  }catch(e){}
+}
+function keyOf(x){
+  if(x.text!==undefined)return 'en::'+normEn(x.text||'');
+  return 'w::'+normCn(x.c||'');
+}
+function curCat(){return document.querySelector('input[name="cat"]:checked').value}
+function catEmoji(c){return c==='f'?'🍎':'🐟'}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function setGMode(m){
+  state.gmode=m;
+  if(m==='en'&&state.started&&state.scIdx<0)nextScenario();
+  applyModeUI();persist();clearFeedback();render();
+}
+function setDiff(d){state.diff=d;applyModeUI();persist();clearFeedback()}
+function applyModeUI(){
+  const hard=state.gmode==='words'&&state.diff==='hard';
+  const en=state.gmode==='en';
+  document.body.classList.toggle('hard',hard);
+  document.body.classList.toggle('mode-en',en);
+  const dt=document.getElementById('diffTabs');if(dt)dt.style.display=en?'none':'';
+  const cs=document.getElementById('catSelect');if(cs)cs.style.display=en?'none':'';
+  const kb=document.getElementById('kbBtn');if(kb)kb.style.display=en?'none':'';
+  const hb=document.getElementById('hintBtn');if(hb)hb.textContent=en?'💡 对话参考':'💡 查看提示';
+  const rh=document.getElementById('ruleHint');if(!rh)return;
+  if(en){
+    const sc=curScenario();
+    rh.textContent=(sc?('🗣️ 情景【'+sc.tag+'】· '):'')+'当前玩家用 ≥2 个单词的英文作答（与情景关键词/句式相关）→ +1 分 · ⚠️ 语法诊断引擎：主谓不一致/遗漏 Be 动词/冠词误用/句首大写/句末标点等 → 红色警告+修复建议、本回合作废不得分 · 重复 → ❌ 该内容已被使用过 · 💡按钮可看标准答案并跳过（不得分）';
+  }else if(hard){
+    rh.textContent='🔥 困难模式：中文与英文必须同时正确且匹配知识库词条（Map O(1) 检索）· 任意一空为空/写错/不匹配 → 红色警告 · 回车提交';
+  }else{
+    rh.textContent='🌿 普通模式：输入知识库内的中文或英文名均可（Map O(1) 检索）· 全局查重 · 回车提交';
+  }
+}
+function curScenario(){return state.scIdx>=0?SCENARIOS[state.scIdx]:null}
+function nextScenario(){
+  const pool=SCENARIOS.map((s,i)=>i).filter(i=>!state.usedSc.has(i));
+  let idx;
+  if(!pool.length){state.usedSc.clear();idx=Math.floor(Math.random()*SCENARIOS.length)}
+  else idx=pool[Math.floor(Math.random()*pool.length)];
+  state.scIdx=idx;state.usedSc.add(idx);
+  persist();
+}
+function updateScenario(){
+  const sc=curScenario();
+  const t=document.getElementById('scTag'), l=document.getElementById('scLine');
+  if(!t||!l)return;
+  if(!sc){t.textContent='情景';l.textContent='...';return}
+  t.textContent='情景·'+sc.tag;
+  l.textContent=sc.line;
+}
+function startGame(){
+  const a=document.getElementById('p1Name').value.trim()||'玩家 A';
+  const b=document.getElementById('p2Name').value.trim()||'玩家 B';
+  state.names=[a,b];state.started=true;
+  document.getElementById('setupCard').style.display='none';
+  addLog('','🎮 比赛开始：'+a+' vs '+b+'（'+(state.gmode==='en'?'🗣️英语对话+语法诊断':(state.diff==='hard'?'🔥困难词汇':'🌿普通词汇'))+'）');
+  if(state.gmode==='en'&&state.scIdx<0)nextScenario();
+  persist();render();focusInput();
+  toast('🎮 比赛开始！由 '+state.names[state.turn]+' 先说','ok');
+}
+function focusInput(){
+  const id=state.gmode==='en'?'ansInput':(state.diff==='hard'?'cnInput':'nameInput');
+  const el=document.getElementById(id);
+  if(el)el.focus();
+}
+function submitTurn(){
+  if(!state.started){startGame();return}
+  if(state.gmode==='en')return submitEnglish();
+  return submitWords();
+}
+function submitWords(){
+  const hard=state.diff==='hard';
+  if(!hard){
+    const inp=document.getElementById('nameInput');
+    const raw=inp.value.trim();
+    if(!raw){flash('err','⚠ 请输入名称再提交！');return}
+    // 普通模式：中文或英文均可 O(1) 匹配
+    const item=CN2ITEM.get(normCn(raw))||EN2ITEM.get(normEn(raw));
+    if(!item){fail(inp,'❌ 无效名称「'+raw+'」，不在 500+ 水果/鱼类知识库中！');return}
+    const cat=curCat();
+    if(item.cat!==cat){fail(inp,'❌ 分类不符！「'+item.c+'」属于'+(cat==='f'?'🐟 鱼类':'🍎 水果')+'，请切换分类再提交');return}
+    const k='w::'+normCn(item.c);
+    if(state.all.has(k)){fail(inp,'❌ 该内容已被使用过！「'+item.c+' / '+item.e+'」已被'+whoSaid(k)+'说过');return}
+    acceptWords(cat,item,inp);
+  }else{
+    const cnEl=document.getElementById('cnInput'), enEl=document.getElementById('enInput');
+    const cn=cnEl.value.trim(), en=enEl.value.trim();
+    if(!cn||!en){fail(!cn?cnEl:enEl,'❌ 中英文不匹配或不在知识库中！（两栏都要填写）');return}
+    const itemCn=CN2ITEM.get(normCn(cn)), itemEn=EN2ITEM.get(normEn(en));
+    if(!itemCn||!itemEn||itemCn!==itemEn){fail(enEl,'❌ 中英文不匹配或不在知识库中！（如：苹果 ↔ Apple 必须是同一词条）');return}
+    const cat=curCat();
+    if(itemCn.cat!==cat){fail(cnEl,'❌ 分类不符！「'+itemCn.c+'」属于'+(cat==='f'?'🐟 鱼类':'🍎 水果')+'，请切换分类再提交');return}
+    const k='w::'+normCn(itemCn.c);
+    if(state.all.has(k)){fail(cnEl,'❌ 该内容已被使用过！「'+itemCn.c+'」已被'+whoSaid(k)+'说过');return}
+    acceptWords(cat,itemCn,cnEl);enEl.value='';
+  }
+}
+function acceptWords(cat,item,el){
+  state.words[state.turn].push({c:item.c,e:item.e,cat:cat,ok:true,at:Date.now()});
+  const k='w::'+normCn(item.c);state.all.add(k);
+  el.value='';
+  document.getElementById('sugBox').classList.remove('show');
+  const saidBy=state.names[state.turn];
+  state.scores[state.turn]++;
+  addLog('hit',catEmoji(cat)+' '+saidBy+' 得分：'+item.c+' / '+item.e+' ['+(cat==='f'?'水果':'鱼类')+']');
+  flash('ok','✅ 有效！'+saidBy+' +1 分（'+state.scores[0]+' : '+state.scores[1]+'），轮到 '+state.names[1-state.turn]);
+  state.turn=1-state.turn;
+  persist();render();
+}
+function submitEnglish(){
+  const el=document.getElementById('ansInput');
+  const ans=el.value.trim().replace(/\s+/g,' ');
+  if(!ans){flash('err','⚠ 请输入英文回答再提交！');return}
+  const words=ans.split(' ').filter(Boolean);
+  if(words.length<2){fail(el,'❌ 回答太短！至少需要 2 个单词的完整英文回应。');return}
+  if(/[\u4e00-\u9fa5]/.test(ans)){fail(el,'❌ 模式二必须使用英文作答！请把中文翻译成英语后再提交。');return}
+  // ⚠️ 语法诊断（先于关键词判定）
+  const issues=checkGrammar(ans);
+  if(issues.length){
+    const first=issues[0];
+    let msg='❌ 语法错误：'+first.detail+' · 修复建议：「'+first.fix+'」';
+    if(issues.length>1)msg+='（另有 '+(issues.length-1)+' 处：'+issues.slice(1).map(x=>x.type).join('、')+'）';
+    fail(el,msg);
+    addLog('err','⚠️ 语法诊断：'+first.detail+' → '+first.fix);
+    showGrammarFix(issues,ans);
+    return;
+  }
+  const k='en::'+normEn(ans);
+  if(state.all.has(k)){fail(el,'❌ 该内容已被使用过！该回答此前已被'+whoSaid(k)+'用过，换一种说法！');return}
+  const sc=curScenario();
+  if(!sc){fail(el,'❌ 暂无情景题，请重新开始比赛。');return}
+  const low=normEn(ans);
+  const hitKw=sc.kw.some(w=>low.includes(w));
+  if(!hitKw){
+    fail(el,'❌ 内容与情景【'+sc.tag+'】无关！（未命中情景关键词与表达方式）请围绕情景重新作答');
+    return;
+  }
+  state.words[state.turn].push({text:ans,sc:sc.tag,ok:true,at:Date.now()});
+  state.all.add(k);
+  el.value='';
+  document.getElementById('sugBox').classList.remove('show');
+  const saidBy=state.names[state.turn];
+  state.scores[state.turn]++;
+  addLog('hit','🗣️ '+saidBy+' 得分（语法正确）：'+ans);
+  flash('ok','✅ 回答出色、语法正确！'+saidBy+' +1 分（'+state.scores[0]+' : '+state.scores[1]+'），轮到 '+state.names[1-state.turn]);
+  state.turn=1-state.turn;
+  nextScenario();
+  persist();render();
+}
+function showGrammarFix(issues,original){
+  document.getElementById('amTitle').textContent='⚠️ 语法错误诊断与修复建议（本回合作废，不扣分）';
+  document.getElementById('amTag').textContent='原句：'+original;
+  document.getElementById('amEn').textContent=issues[0].fix;
+  document.getElementById('amTip').textContent=issues.map(x=>'· '+x.type+'\n  '+x.detail+'\n  建议：'+x.tip).join('\n');
+  document.getElementById('answerModal').classList.add('show');
+}
+function fail(el,msg){
+  el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),450);
+  flash('err',msg);
+  const who=state.names[state.turn];
+  addLog(msg.indexOf('该内容已被使用过')>=0?'dup':'err',who+'：'+msg);
+  persist();
+}
+function whoSaid(k){
+  for(let i=0;i<2;i++){if(state.words[i].some(x=>keyOf(x)===k))return state.names[i]}
+  return '其他玩家';
+}
+function flash(type,msg){
+  ['errBox','okBox','warnBox'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('show')});
+  const map={err:'errBox',ok:'okBox',warn:'warnBox'};
+  const box=document.getElementById(map[type]);
+  if(!box)return;
+  box.textContent=msg;
+  void box.offsetWidth;box.classList.add('show');
+}
+function clearFeedback(){['errBox','okBox','warnBox'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('show')})}
+function addLog(cls,text){state.logs.unshift({cls:cls||'',text:text});renderLog()}
+function renderLog(){
+  const box=document.getElementById('log');
+  if(!box)return;
+  if(!state.logs.length){box.innerHTML='<div>暂无历史记录</div>';return}
+  box.innerHTML=state.logs.slice(0,50).map(l=>'<div class="'+(l.cls||'')+'">'+esc(l.text)+'</div>').join('');
+}
+function showSuggestions(){
+  if(state.gmode==='en'){
+    const sc=curScenario();
+    if(!sc)return;
+    document.getElementById('sugTitle').textContent='💡 情景关键词提示（点击填入）';
+    document.getElementById('sugChips').innerHTML=sc.kw.slice(0,8).map(w=>
+      '<span class="sug-chip" onclick="appendAns(\''+esc(w)+'\')">'+esc(w)+'</span>').join('');
+    document.getElementById('sugBox').classList.add('show');
+    return;
+  }
+  const pool=[...FRUITS,...FISHES].filter(x=>!state.all.has('w::'+normCn(x.c)));
+  if(!pool.length){toast('知识库已被说完了，你们太强了！','ok');return}
+  shuffle(pool);
+  document.getElementById('sugTitle').textContent='💡 提示（点击直接填入，均为尚未被说过的词）';
+  document.getElementById('sugChips').innerHTML=pool.slice(0,5).map(x=>
+    '<span class="sug-chip" onclick="fillWord(\''+esc(x.c)+'\',\''+esc(x.e)+'\')">'+
+    catEmoji(x.cat)+' '+esc(x.c)+' <span class="en">/ '+esc(x.e)+'</span></span>').join('');
+  document.getElementById('sugBox').classList.add('show');
+}
+function appendAns(w){
+  const el=document.getElementById('ansInput');
+  el.value=(el.value?el.value.replace(/\s+$/,' ')+' ':'')+w;
+  el.focus();
+}
+function fillWord(cn,en){
+  if(state.diff==='hard'){document.getElementById('cnInput').value=cn;document.getElementById('enInput').value=en}
+  else{document.getElementById('nameInput').value=cn}
+  clearFeedback();
+  ['nameInput','cnInput','enInput'].forEach(id=>{const e=document.getElementById(id);if(e)e.classList.remove('shake')});
+  focusInput();
+}
+function showAnswer(){
+  const en=state.gmode==='en';
+  let tagTxt,ansTxt,tipTxt;
+  if(en){
+    const sc=curScenario();
+    if(!sc)return;
+    tagTxt='🗣️ 情景：'+sc.tag;
+    ansTxt=sc.ans;
+    tipTxt='标准示例回答（语法正确）· 点击「放弃本回合」→ 当前玩家不得分、本回合跳过、自动切换到 '+state.names[1-state.turn];
+  }else{
+    const pool=[...FRUITS,...FISHES].filter(x=>!state.all.has('w::'+normCn(x.c)));
+    if(!pool.length){toast('知识库已被说完了！','ok');return}
+    const pick=pool[Math.floor(Math.random()*pool.length)];
+    tagTxt=(state.diff==='hard'?'🔥 困难模式参考词条':'💡 推荐词条')+'：'+catEmoji(pick.cat)+' '+(pick.cat==='f'?'水果':'鱼类');
+    ansTxt=pick.c+' / '+pick.e;
+    tipTxt='点「放弃本回合」→ 本回合跳过、不得分、自动轮到 '+state.names[1-state.turn]+'（也可关闭弹窗自己再想想）';
+  }
+  document.getElementById('amTitle').textContent='💡 答不上？提示 / 答案';
+  document.getElementById('amTag').textContent=tagTxt;
+  document.getElementById('amEn').textContent=ansTxt;
+  document.getElementById('amTip').textContent=tipTxt;
+  document.getElementById('answerModal').classList.add('show');
+}
+function closeAnswer(skip){
+  document.getElementById('answerModal').classList.remove('show');
+  if(!skip)return;
+  if(!state.started){toast('比赛还没开始','err');return}
+  const who=state.names[state.turn];
+  if(state.gmode==='en'){
+    const sc=curScenario();
+    state.words[state.turn].push({text:'[跳过] '+(sc?sc.tag:''),sc:sc?sc.tag:'',ok:false,at:Date.now()});
+    nextScenario();
+    addLog('skip','🙈 '+who+' 查看答案后放弃本回合（不得分），情景切换');
+  }else{
+    state.words[state.turn].push({c:'[跳过]',e:'skip',cat:'f',ok:false,at:Date.now()});
+    addLog('skip','🙈 '+who+' 查看答案后放弃本回合（不得分）');
+  }
+  flash('warn','🙈 '+who+' 本回合跳过（不得分），轮到 '+state.names[1-state.turn]);
+  state.turn=1-state.turn;
+  persist();render();focusInput();
+}
+function toggleKB(){
+  const c=document.getElementById('kbCard');
+  c.style.display=c.style.display==='none'?'':'none';
+  if(c.style.display!=='none'){renderKB();c.scrollIntoView({behavior:'smooth'})}
+}
+function renderKB(){
+  document.getElementById('kbFruitCnt').textContent=FRUITS.length;
+  document.getElementById('kbSeaCnt').textContent=FISHES.length;
+  document.getElementById('kbAllCnt').textContent=KB_TOTAL;
+  const q=normEn(document.getElementById('kbSearch').value);
+  const qc=normCn(document.getElementById('kbSearch').value);
+  let arr=FRUITS.concat(FISHES);
+  if(kbFilter!=='all')arr=arr.filter(x=>x.cat===kbFilter);
+  if(q||qc)arr=arr.filter(x=>normEn(x.e).indexOf(q)>=0||normCn(x.c).indexOf(qc)>=0);
+  if(arr.length>600)arr=arr.slice(0,600);
+  document.getElementById('kbList').innerHTML=arr.map(x=>{
+    const used=state.all.has('w::'+normCn(x.c));
+    return '<span class="kb-tag '+x.cat+(used?' used':'')+'">'+esc(x.c)+'<span class="en"> / '+esc(x.e)+'</span></span>';
+  }).join('');
+}
+function endGame(){
+  if(!state.started){toast('比赛还没开始','err');return}
+  const s1=state.scores[0], s2=state.scores[1];
+  let res;
+  if(s1>s2)res='<span class="a">'+esc(state.names[0])+'</span> 🏆 获胜！';
+  else if(s2>s1)res='<span class="b">'+esc(state.names[1])+'</span> 🏆 获胜！';
+  else res='🤝 平局！';
+  document.getElementById('resText').innerHTML=res;
+  document.getElementById('resDetail').textContent=state.names[0]+': '+s1+' 分  vs  '+state.names[1]+': '+s2+' 分 · 当前模式：'+(state.gmode==='en'?'🗣️英语对话(含语法诊断)':(state.diff==='hard'?'🔥困难词汇':'🌿普通词汇'));
+  document.getElementById('resultModal').classList.add('show');
+  addLog('','🏁 结算：'+s1+' vs '+s2);
+  persist();
+}
+function closeResult(){document.getElementById('resultModal').classList.remove('show')}
+function restart(){
+  if(!confirm('重新开始？比分、词汇与回合将清空（保留玩家名称与模式）。'))return;
+  state.started=false;state.turn=0;state.scores=[0,0];
+  state.words=[[],[]];state.all=new Set();state.logs=[];state.scIdx=-1;state.usedSc.clear();
+  document.getElementById('setupCard').style.display='';
+  ['nameInput','cnInput','enInput','ansInput'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  clearFeedback();
+  document.getElementById('sugBox').classList.remove('show');
+  persist();render();
+  toast('🔄 已重置，选择模式后开始新比赛','ok');
+}
+function clearData(){
+  if(!confirm('清空全部本地数据（含玩家名称与历史）？'))return;
+  localStorage.removeItem(LS_DATA);
+  state.started=false;state.turn=0;state.names=['玩家 A','玩家 B'];
+  state.gmode='words';state.diff='normal';state.scores=[0,0];
+  state.words=[[],[]];state.all=new Set();state.logs=[];state.scIdx=-1;state.usedSc.clear();
+  document.getElementById('setupCard').style.display='';
+  document.querySelector('input[name="gmode"][value="words"]').checked=true;
+  const dv=document.querySelector('input[name="diff"][value="normal"]');if(dv)dv.checked=true;
+  applyModeUI();
+  document.getElementById('p1Name').value='玩家 A';
+  document.getElementById('p2Name').value='玩家 B';
+  ['nameInput','cnInput','enInput','ansInput'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  persist();render();
+  toast('🗑 已清空全部数据','ok');
+}
+function render(){
+  const s1=state.scores[0], s2=state.scores[1];
+  document.getElementById('name1').textContent=state.names[0];
+  document.getElementById('name2').textContent=state.names[1];
+  document.getElementById('listName1').textContent=state.names[0];
+  document.getElementById('listName2').textContent=state.names[1];
+  document.getElementById('score1').innerHTML=s1+' <small>分</small>';
+  document.getElementById('score2').innerHTML=s2+' <small>分</small>';
+  document.getElementById('words1').textContent=lastText(0);
+  document.getElementById('words2').textContent=lastText(1);
+  document.getElementById('listCnt1').textContent='('+state.words[0].length+')';
+  document.getElementById('listCnt2').textContent='('+state.words[1].length+')';
+  const kt=document.getElementById('kbTotal');if(kt)kt.textContent=KB_TOTAL;
+  const active=state.started?state.turn:-1;
+  document.getElementById('card1').classList.toggle('active',active===0);
+  document.getElementById('card2').classList.toggle('active',active===1);
+  const tb=document.getElementById('turnBanner');
+  tb.className='turn-banner '+(state.turn===0?'p1':'p2');
+  tb.textContent=state.started?('👉 当前回合：'+state.names[state.turn]):'⏳ 输入玩家名称后点击「开始比赛」';
+  renderChips(0,'chips1');renderChips(1,'chips2');renderLog();updateScenario();applyModeUI();
+  if(document.getElementById('kbCard').style.display!=='none')renderKB();
+}
+function lastText(i){
+  const w=state.words[i];
+  if(!w.length)return '尚未出招';
+  const x=w[w.length-1];
+  if(x.text!==undefined)return (x.ok?'最近：':'最近(跳过)：')+x.text;
+  return (x.ok?'最近：':'最近(跳过)：')+x.c+(state.diff==='hard'?(' / '+x.e):'');
+}
+function renderChips(i,elId){
+  const box=document.getElementById(elId);
+  const w=state.words[i];
+  if(!w.length){box.innerHTML='<div class="empty">暂无</div>';return}
+  box.innerHTML=w.map((x,k)=>{
+    if(x.text!==undefined){
+      return '<span class="chip '+(x.ok?'s':'skip')+'"><span class="idx">#'+(k+1)+'</span>'+(x.ok?'🗣️ ':'🙈 ')+esc(x.text)+'</span>';
+    }
+    return '<span class="chip '+(x.ok?(x.cat==='f'?'f':'s'):'skip')+'"><span class="idx">#'+(k+1)+'</span>'+catEmoji(x.cat)+' '+esc(x.c)+
+      (state.diff==='hard'&&x.ok?'<span class="en"> / '+esc(x.e)+'</span>':'')+'</span>';
+  }).join('');
+}
+function toggleTheme(){
+  const d=document.documentElement.classList.toggle('dark');
+  localStorage.setItem(LS_THEME,d?'dark':'light');
+  syncTheme();
+}
+function syncTheme(){
+  document.getElementById('themeBtn').textContent=document.documentElement.classList.contains('dark')?'☀ 日间':'🌙 夜间';
+}
+let toastTimer=null;
+function toast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='show'+(type?' '+type:'');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.className=''},2600);
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
+['nameInput','cnInput','enInput','ansInput'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submitTurn()}});
+  el.addEventListener('input',clearFeedback);
+});
+document.getElementById('p1Name').addEventListener('keydown',e=>{if(e.key==='Enter')startGame()});
+document.getElementById('p2Name').addEventListener('keydown',e=>{if(e.key==='Enter')startGame()});
+document.getElementById('card1').addEventListener('dblclick',()=>rename(0));
+document.getElementById('card2').addEventListener('dblclick',()=>rename(1));
+function rename(i){
+  const v=prompt('修改玩家 '+(i+1)+' 名称',state.names[i]);
+  if(v&&v.trim()){state.names[i]=v.trim().slice(0,12);persist();render()}
+}
+load();
+</script>
+</body>
+</html>
