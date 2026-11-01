@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10793271 审计报告数据分析与表格提取</title>
+<style>
+:root{--red:#c8362c;--gold:#e8a81c;--navy:#142a4f;--paper:#fdfbf6;--light:#f6f3ec;--dark:#1b2a3a;--muted:#7286a0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:var(--paper);color:var(--dark);line-height:1.7}
+.wrap{max-width:1150px;margin:0 auto;padding:34px 24px}
+header{background:var(--red);color:#fff;border-radius:16px;padding:26px 28px;margin-bottom:22px}
+h1{font-size:clamp(23px,3.6vw,34px);margin-bottom:6px}
+.sub{color:#ffe18a;font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:#fff;border:2px solid var(--navy);border-radius:14px;padding:15px 10px;text-align:center}
+.kpi .num{font-size:27px;font-weight:800;color:var(--red)}.kpi .lab{font-size:13.5px;font-weight:700;margin-top:4px;color:var(--navy)}
+.card{background:var(--light);border:2px solid var(--navy);border-radius:14px;padding:18px 22px;margin-bottom:20px;overflow-x:auto}
+.card h2{font-size:19px;color:var(--navy);border-left:7px solid var(--red);padding-left:11px;margin-bottom:10px}
+table{border-collapse:collapse;width:100%;min-width:680px;font-size:14px;background:#fff}
+th{background:var(--navy);color:#fff;padding:8px 10px;text-align:center}
+td{border:1px solid #d8e0ea;padding:7px 10px}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.pos{background:#fdeaea}.ok{background:#e8f5ec}
+.note{background:#fff;border:2px dashed var(--gold);border-radius:14px;padding:14px 20px;font-size:14.5px;margin-bottom:20px}
+.files{background:var(--light);border:2px solid #189a55;border-radius:14px;padding:15px 20px;font-size:14.5px;margin-bottom:18px}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:18px 0}
+</style></head><body>
+<div class="wrap">
+<header><h1>10793271 审计报告数据分析与表格提取</h1>
+<div class="sub">《国务院关于2025年度中央预算执行和其他财政收支的审计工作报告》· 25页 · 7张提取表</div></header>
+<div class="kpis">
+<div class="kpi"><div class="num">97372.53亿</div><div class="lab">中央预算收入总量</div></div>
+<div class="kpi"><div class="num">145972.53亿</div><div class="lab">中央预算支出总量</div></div>
+<div class="kpi"><div class="num">1000.78亿</div><div class="lab">过头税费+虚增收入</div></div>
+<div class="kpi"><div class="num">910+亿</div><div class="lab">移送违纪违法资金</div></div></div>
+<div class="note">提取说明：pdfplumber 检出原文无表格线结构（0 个原生表格），按 7 大章节核校提取结构化表；成品 <b>10793271审计数据分析.xlsx</b>（8 表，16179B）+ <b>10793271分析条目.json</b>（200 条）均在沙箱与宿主 workspace。</div>
+<div class="card"><h2>表4 民生资金 · 问题率排序</h2>
+<table><tr><th>领域</th><th>审计覆盖(亿元)</th><th>问题金额(亿元)</th><th>问题率</th><th>规模摘要</th></tr>
+<tr><td>县域涉农资金</td><td class="num">1399.58</td><td class="num pos">622.55</td><td class="num pos">44.5%</td><td>截留279.48+骗贷270.56+摊派72.51</td></tr>
+<tr><td>中药产销</td><td class="num">215.91</td><td class="num pos">46.52</td><td class="num pos">21.6%</td><td>虚开采购22.81亿</td></tr>
+<tr><td>工伤保险基金</td><td class="num">1151.10</td><td class="num pos">48.69</td><td class="num">4.2%</td><td>应保未保396.6万人</td></tr>
+<tr><td>生育支持资金</td><td class="num">530.94</td><td class="num pos">10.83</td><td class="num">2.0%</td><td>涉100多万人</td></tr></table></div>
+<div class="card"><h2>表3 重大风险 · 地方债与金融（节选）</h2>
+<table><tr><th>风险项</th><th>金额(亿元)</th><th>主体</th></tr>
+<tr><td>内卷竞争虚增存贷</td><td class="num pos">14100</td><td>3金融企业</td></tr>
+<tr><td>债券虚假/让利规模</td><td class="num pos">7569.59</td><td>3金融企业</td></tr>
+<tr><td>违规信托销售</td><td class="num pos">1491.78</td><td>信托（刚兑20.42）</td></tr>
+<tr><td>科技积分贷形同虚设</td><td class="num pos">642.22</td><td>4银行126分行</td></tr>
+<tr><td>掩盖不良资产</td><td class="num pos">634.41</td><td>金融企业</td></tr>
+<tr><td>虚假化解/虚减债务</td><td class="num pos">66.82</td><td>4省"一删了之"</td></tr></table></div>
+<div class="card"><h2>表5 国有资产（节选）</h2>
+<table><tr><th>类别</th><th>问题金额(亿元)</th><th>摘要</th></tr>
+<tr><td>7户央企权益不实</td><td class="num pos">2325.52</td><td>资产922.71/负债1459.37不实</td></tr>
+<tr><td>央企闲置资金资产</td><td class="num pos">216.31</td><td>178.53资金+37.78资产，最长13年</td></tr>
+<tr><td>3金融企业违规经营</td><td class="num pos">1310.57</td><td>不良634.41+信贷676.16</td></tr>
+<tr><td>帮扶资产问题</td><td class="num pos">263.58</td><td>基数658.52亿（11省197县）</td></tr></table></div>
+<div class="card"><h2>表7 执法与整改</h2>
+<table><tr><th>项目</th><th>数据</th></tr>
+<tr><td>移送查处（2025.5以来）</td><td class="num pos">260+起 / 1100+人 / 910+亿元</td></tr>
+<tr><td>2024年度问题整改（至2026.4）</td><td class="num ok">1.41万亿元、制度1150+项、处分3690+人</td></tr>
+<tr><td>审计建议</td><td class="ok">5大方向：宏观政策/深化改革/防风险/保民生/八项规定</td></tr></table></div>
+<div class="files"><b>产物文件：</b>10793271审计数据分析.xlsx（8表）· 10793271分析条目.json（200条）· mk_audit_xlsx.py · 10793271提取表格.xlsx/md</div>
+<footer>10793271 数据分析与表格提取 · 总计200条量化条目</footer></div></body></html>
